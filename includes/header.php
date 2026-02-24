@@ -3,19 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIT-PRO System</title>
+    <title>Fit System - Panel Trenera</title>
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,600,700,800" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/fontawesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background: #f8f9fa; }
-        #wrapper { display: flex; width: 100%; }
-        #sidebar-wrapper { min-height: 100vh; width: 250px; background: #212529; color: #fff; flex-shrink: 0; }
-        #page-content-wrapper { flex-grow: 1; padding: 20px; width: 100%; }
-        .list-group-item { background: transparent; color: #ccc; border: none; padding: 12px 20px; text-decoration: none; display: block; }
-        .list-group-item:hover { background: #343a40; color: #fff; }
-        .sidebar-heading { padding: 20px; font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid #3e444a; }
+        body { font-family: 'Nunito', sans-serif; background-color: #f8f9fc; }
+        .card { border: none; border-radius: 10px; }
+        .sidebar { min-height: 100vh; background: #4e73df; color: white; }
     </style>
-	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-<div id="wrapper">
+<div class="d-flex">
