@@ -1,33 +1,32 @@
 <?php
-error_reporting(E_ALL);
+// Wymuszamy pokazywanie błędów, żeby zamiast 500 zobaczyć opis błędu
 ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-// Wychodzimy o jeden poziom do góry, bo jesteśmy w folderze /users/
-require_once '../config/db.php';
+// Dynamiczne ustalanie ścieżki do katalogu głównego
+$root = dirname(__DIR__); 
+
+require_once $root . '/config/db.php';
 
 try {
-    $stmt = $pdo->query("SELECT u.*, g.nazwa as grupa_nazwa, g.godzina 
-                         FROM fit_users u 
-                         LEFT JOIN fit_groups g ON u.group_id = g.id 
-                         ORDER BY u.id DESC");
-    $users = $stmt->fetchAll();
+    $users = $pdo->query("SELECT u.*, g.nazwa as grupa_nazwa FROM fit_users u LEFT JOIN fit_groups g ON u.group_id = g.id ORDER BY u.id DESC")->fetchAll();
 } catch (PDOException $e) {
-    die("Błąd bazy: " . $e->getMessage());
+    die("Błąd zapytania: " . $e->getMessage());
 }
 
-include '../includes/header.php';
-include '../includes/sidebar.php';
+include $root . '/includes/header.php';
+include $root . '/includes/sidebar.php';
 ?>
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3>Lista Klubowiczów</h3>
-        <a href="add.php" class="btn btn-primary btn-sm">Dodaj użytkownika</a>
+        <h2>Lista Klubowiczów</h2>
+        <a href="add.php" class="btn btn-primary">Dodaj użytkownika</a>
     </div>
-
     <div class="card shadow">
         <div class="card-body">
-            <table class="table table-striped">
+            <table class="table">
                 <thead>
                     <tr>
                         <th>Imię i Nazwisko</th>
@@ -39,10 +38,8 @@ include '../includes/sidebar.php';
                     <?php foreach ($users as $u): ?>
                     <tr>
                         <td><?= htmlspecialchars($u['imie'] . ' ' . $u['nazwisko']) ?></td>
-                        <td><?= $u['grupa_nazwa'] ? htmlspecialchars($u['grupa_nazwa']) : 'Brak' ?></td>
-                        <td>
-                            <a href="edit.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-info">Edytuj</a>
-                        </td>
+                        <td><?= htmlspecialchars($u['grupa_nazwa'] ?? 'Brak') ?></td>
+                        <td><a href="edit.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-info">Edytuj</a></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -51,4 +48,4 @@ include '../includes/sidebar.php';
     </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php include $root . '/includes/footer.php'; ?>
