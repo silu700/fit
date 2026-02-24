@@ -2,9 +2,11 @@
 $root = dirname(__DIR__);
 require_once $root . '/config/db.php';
 
+// Pobieranie parametrów filtra (domyślnie obecny miesiąc i rok)
 $m = isset($_GET['m']) ? (int)$_GET['m'] : (int)date('n');
 $r = isset($_GET['r']) ? (int)$_GET['r'] : (int)date('Y');
 
+// Pobieramy Użytkowników i ich statusy płatności dla wybranego okresu
 $sql = "SELECT u.id, u.imie, u.nazwisko, p.id as payment_id, p.kwota, p.data_wplaty, p.metoda 
         FROM fit_users u 
         LEFT JOIN fit_payments p ON u.id = p.user_id AND p.miesiac = ? AND p.rok = ?
@@ -15,26 +17,31 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute([$m, $r]);
 $list = $stmt->fetchAll();
 
+// Obliczenia do nagłówka (podsumowanie)
 $suma_wplat = 0;
 $nieoplacone_count = 0;
 foreach ($list as $row) {
-    if ($row['payment_id']) $suma_wplat += $row['kwota'];
-    else $nieoplacone_count++;
+    if ($row['payment_id']) {
+        $suma_wplat += $row['kwota'];
+    } else {
+        $nieoplacone_count++;
+    }
 }
 
 $miesiace = [1=>'Styczeń', 2=>'Luty', 3=>'Marzec', 4=>'Kwiecień', 5=>'Maj', 6=>'Czerwiec', 7=>'Lipiec', 8=>'Sierpień', 9=>'Wrzesień', 10=>'Październik', 11=>'Listopad', 12=>'Grudzień'];
-$lata = range(date('Y') - 1, date('Y') + 2); // Zakres lat: zeszły, obecny i dwa przyszłe
+$lata = range(date('Y') - 1, date('Y') + 2); // Zakres: rok wstecz i 2 lata do przodu
 
 include $root . '/includes/header.php';
 include $root . '/includes/sidebar.php';
 ?>
 
 <div class="container-fluid">
-    <div class="card shadow mb-4">
+    <div class="card shadow mb-4 border-left-primary">
         <div class="card-body">
             <div class="row align-items-center">
-                <div class="col-md-5">
-                    <form class="d-flex align-items-center">
+                <div class="col-md-4">
+                    <h4 class="m-0 text-gray-800"><?= $miesiace[$m] ?> <?= $r ?></h4>
+                    <form class="d-flex mt-2">
                         <select name="m" class="form-select form-select-sm me-1" style="width: 130px;">
                             <?php foreach($miesiace as $num => $name): ?>
                                 <option value="<?= $num ?>" <?= $m == $num ? 'selected' : '' ?>><?= $name ?></option>
@@ -42,91 +49,131 @@ include $root . '/includes/sidebar.php';
                         </select>
                         <select name="r" class="form-select form-select-sm me-1" style="width: 100px;">
                             <?php foreach($lata as $rok): ?>
-                                <option value="<?= $rok ?>" <?= $r == $rok ? 'selected' : '' ?>><?= $rok ?></option>
+                                <option value="<?= $rok ?>" <?= $rok == $r ? 'selected' : '' ?>><?= $rok ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <button type="submit" class="btn btn-sm btn-primary">Pokaż</button>
+                        <button type="submit" class="btn btn-sm btn-outline-primary">Pokaż</button>
                     </form>
                 </div>
-                <div class="col-md-4">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
-                        <input type="text" id="filterInput" class="form-control" placeholder="Szukaj użytkownika (imię lub nazwisko)...">
+                
+                <div class="col-md-5">
+                    <label class="small fw-bold text-muted text-uppercase">Szybkie szukanie Użytkownika:</label>
+                    <div class="input-group input-group-sm shadow-sm">
+                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" id="liveSearch" class="form-control border-start-0" placeholder="Wpisz imię lub nazwisko...">
                     </div>
                 </div>
-                <div class="col-md-3 text-end">
-                    <a href="add.php" class="btn btn-sm btn-success">+ Nowa wpłata</a>
+
+                <div class="col-md-3 text-end mt-3 mt-md-0">
+                    <a href="add.php" class="btn btn-primary shadow-sm btn-sm">
+                        <i class="fas fa-plus fa-sm text-white-50"></i> Nowa Wpłata
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="p-3 bg-white border rounded shadow-sm d-flex justify-content-between align-items-center">
-                <span class="text-muted fw-bold">SUMA WPŁAT:</span>
-                <span class="h4 mb-0 text-success fw-bold"><?= number_format($suma_wplat, 2, ',', ' ') ?> PLN</span>
+        <div class="col-xl-6 col-md-6 mb-2">
+            <div class="card border-left-success shadow h-100 py-2 bg-success text-white">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2 text-center">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Zebrane wpłaty w tym miesiącu</div>
+                            <div class="h3 mb-0 font-weight-bold"><?= number_format($suma_wplat, 2, ',', ' ') ?> PLN</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="p-3 bg-white border rounded shadow-sm d-flex justify-content-between align-items-center">
-                <span class="text-muted fw-bold">BRAK WPŁAT:</span>
-                <span class="h4 mb-0 text-danger fw-bold"><?= $nieoplacone_count ?> osób</span>
+        <div class="col-xl-6 col-md-6 mb-2">
+            <div class="card border-left-danger shadow h-100 py-2 bg-danger text-white">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2 text-center">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Użytkownicy bez wpłaty</div>
+                            <div class="h3 mb-0 font-weight-bold"><?= $nieoplacone_count ?> osób</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow">
+    <div class="card shadow mb-4">
         <div class="card-body p-0">
-            <table class="table table-hover mb-0" id="paymentsTable">
-                <thead class="table-light">
-                    <tr>
-                        <th>Użytkownik</th>
-                        <th>Status</th>
-                        <th>Kwota</th>
-                        <th>Data</th>
-                        <th class="text-end">Akcje</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach($list as $l): ?>
-                    <tr>
-                        <td class="user-name">
-                            <a href="../users/view.php?id=<?= $l['id'] ?>" class="text-decoration-none text-dark fw-bold">
-                                <?= htmlspecialchars($l['imie'] . ' ' . $l['nazwisko']) ?>
-                            </a>
-                        </td>
-                        <td>
-                            <span class="badge <?= $l['payment_id'] ? 'bg-success' : 'bg-danger' ?>">
-                                <?= $l['payment_id'] ? 'Opłacone' : 'Czeka' ?>
-                            </span>
-                        </td>
-                        <td class="fw-bold"><?= $l['payment_id'] ? $l['kwota'].' PLN' : '-' ?></td>
-                        <td><?= $l['data_wplaty'] ?? '-' ?></td>
-                        <td class="text-end">
-                            <?php if($l['payment_id']): ?>
-                                <a href="edit.php?id=<?= $l['payment_id'] ?>" class="btn btn-sm btn-outline-info"><i class="fas fa-edit"></i></a>
-                            <?php else: ?>
-                                <a href="add.php?user_id=<?= $l['id'] ?>" class="btn btn-sm btn-success px-3">Opłać</a>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="paymentsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Użytkownik</th>
+                            <th>Status</th>
+                            <th>Kwota</th>
+                            <th>Data</th>
+                            <th>Metoda</th>
+                            <th class="text-end pe-4">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($list as $l): ?>
+                        <tr class="payment-row <?= !$l['payment_id'] ? 'table-light' : '' ?>">
+                            <td class="ps-4 user-name-cell">
+                                <a href="../users/view.php?id=<?= $l['id'] ?>" class="text-decoration-none text-dark fw-bold">
+                                    <?= htmlspecialchars($l['imie'] . ' ' . $l['nazwisko']) ?>
+                                </a>
+                            </td>
+                            <td>
+                                <?php if($l['payment_id']): ?>
+                                    <span class="badge bg-success rounded-pill px-3">Opłacone</span>
+                                <?php else: ?>
+                                    <span class="badge bg-danger rounded-pill px-3">Czeka</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="fw-bold text-dark">
+                                <?= $l['payment_id'] ? number_format($l['kwota'], 2, ',', ' ') . ' PLN' : '-' ?>
+                            </td>
+                            <td class="text-muted small"><?= $l['data_wplaty'] ?? '-' ?></td>
+                            <td><span class="small"><?= $l['metoda'] ?? '-' ?></span></td>
+                            <td class="text-end pe-4">
+                                <?php if($l['payment_id']): ?>
+                                    <div class="btn-group shadow-sm">
+                                        <a href="edit.php?id=<?= $l['payment_id'] ?>" class="btn btn-sm btn-outline-info" title="Edytuj">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="delete.php?id=<?= $l['payment_id'] ?>" 
+                                           class="btn btn-sm btn-outline-danger" 
+                                           onclick="return confirm('Usunąć tę wpłatę?')" 
+                                           title="Usuń">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                <?php else: ?>
+                                    <a href="add.php?user_id=<?= $l['id'] ?>" class="btn btn-sm btn-success px-3 shadow-sm">
+                                        <i class="fas fa-hand-holding-usd me-1"></i> Opłać
+                                    </a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-// Skrypt do filtrowania tabeli na żywo
-document.getElementById('filterInput').addEventListener('keyup', function() {
-    let val = this.value.toLowerCase();
-    let rows = document.querySelectorAll('#paymentsTable tbody tr');
-    
+document.getElementById('liveSearch').addEventListener('keyup', function() {
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll('.payment-row');
+
     rows.forEach(row => {
-        let name = row.querySelector('.user-name').textContent.toLowerCase();
-        row.style.display = name.includes(val) ? '' : 'none';
+        let name = row.querySelector('.user-name-cell').textContent.toLowerCase();
+        if (name.includes(filter)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
     });
 });
 </script>
