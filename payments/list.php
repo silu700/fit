@@ -1,7 +1,12 @@
 <?php
+// Włączamy raportowanie błędów dla pewności
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 $root = dirname(__DIR__);
 require_once $root . '/config/db.php';
 
+// Parametry filtra
 $m = isset($_GET['m']) ? (int)$_GET['m'] : (int)date('n');
 $r = isset($_GET['r']) ? (int)$_GET['r'] : (int)date('Y');
 
@@ -30,56 +35,97 @@ include $root . '/includes/sidebar.php';
 ?>
 
 <div class="container-fluid">
-    <div class="row mb-4 mt-3">
-        <div class="col-md-6"><div class="card bg-success text-white p-3 shadow-sm text-center"><h5>Zebrano: <?= number_format($suma_wplat, 2) ?> PLN</h5></div></div>
-        <div class="col-md-6"><div class="card bg-danger text-white p-3 shadow-sm text-center"><h5>Brak wpłat: <?= $nieoplacone_count ?> osób</h5></div></div>
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-5">
+                    <form class="d-flex align-items-center">
+                        <select name="m" class="form-select form-select-sm me-1" style="width: 140px;">
+                            <?php foreach($miesiace as $num => $name): ?>
+                                <option value="<?= $num ?>" <?= $m == $num ? 'selected' : '' ?>><?= $name ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <select name="r" class="form-select form-select-sm me-1" style="width: 100px;">
+                            <?php foreach($lata as $rok): ?>
+                                <option value="<?= $rok ?>" <?= $rok == $r ? 'selected' : '' ?>><?= $rok ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary px-3">Pokaż</button>
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" id="liveSearch" class="form-control" placeholder="Szukaj Użytkownika (imię/nazwisko)...">
+                    </div>
+                </div>
+                <div class="col-md-3 text-end">
+                    <a href="add.php" class="btn btn-sm btn-success shadow-sm px-3">+ Nowa Wpłata</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-success text-white shadow-sm p-3 text-center border-0">
+                <div class="small fw-bold opacity-75 text-uppercase">Suma wpłat: <?= $miesiace[$m] ?></div>
+                <div class="h3 mb-0 fw-bold"><?= number_format($suma_wplat, 2, ',', ' ') ?> PLN</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-danger text-white shadow-sm p-3 text-center border-0">
+                <div class="small fw-bold opacity-75 text-uppercase">Oczekujące wpłaty</div>
+                <div class="h3 mb-0 fw-bold"><?= $nieoplacone_count ?> osób</div>
+            </div>
+        </div>
     </div>
 
     <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center bg-white">
-            <h6 class="m-0 font-weight-bold text-primary">Płatności: <?= $miesiace[$m] ?> <?= $r ?></h6>
-            <input type="text" id="liveSearch" class="form-control form-control-sm w-25" placeholder="Szukaj...">
-        </div>
         <div class="card-body p-0">
-            <table class="table table-hover align-middle mb-0" id="paymentsTable">
-                <thead class="table-light">
-                    <tr>
-                        <th class="ps-4">Użytkownik</th>
-                        <th>Status</th>
-                        <th>Kwota</th>
-                        <th class="text-end pe-4">Akcje</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($list as $l): ?>
-                    <tr class="payment-row">
-                        <td class="ps-4 user-name">
-                            <a href="../users/view.php?id=<?= $l['id'] ?>" class="text-decoration-none fw-bold text-dark">
-                                <?= htmlspecialchars($l['imie'] . ' ' . $l['nazwisko']) ?>
-                            </a>
-                        </td>
-                        <td>
-                            <span class="badge <?= $l['payment_id'] ? 'bg-success' : 'bg-warning text-dark' ?>">
-                                <?= $l['payment_id'] ? 'Opłacone' : 'Czeka' ?>
-                            </span>
-                        </td>
-                        <td class="fw-bold"><?= $l['payment_id'] ? number_format($l['kwota'], 2) . ' PLN' : '-' ?></td>
-                        <td class="text-end pe-4">
-                            <?php if($l['payment_id']): ?>
-                                <div class="btn-group">
-                                    <a href="edit.php?id=<?= $l['payment_id'] ?>" class="btn btn-sm btn-outline-info"><i class="fas fa-edit"></i></a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger delete-payment" data-id="<?= $l['payment_id'] ?>">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            <?php else: ?>
-                                <a href="add.php?user_id=<?= $l['id'] ?>" class="btn btn-sm btn-success px-3">Opłać</a>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="paymentsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Użytkownik</th>
+                            <th>Status</th>
+                            <th>Kwota</th>
+                            <th>Metoda</th>
+                            <th class="text-end pe-4">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($list as $l): ?>
+                        <tr class="payment-row">
+                            <td class="ps-4 user-name-cell">
+                                <a href="../users/view.php?id=<?= $l['id'] ?>" class="text-decoration-none fw-bold text-dark">
+                                    <?= htmlspecialchars($l['imie'] . ' ' . $l['nazwisko']) ?>
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill <?= $l['payment_id'] ? 'bg-success' : 'bg-warning text-dark' ?>">
+                                    <?= $l['payment_id'] ? 'Opłacone' : 'Czeka' ?>
+                                </span>
+                            </td>
+                            <td class="fw-bold text-dark"><?= $l['payment_id'] ? number_format($l['kwota'], 2, ',', ' ') . ' PLN' : '-' ?></td>
+                            <td class="small text-muted"><?= $l['metoda'] ?? '-' ?></td>
+                            <td class="text-end pe-4">
+                                <?php if($l['payment_id']): ?>
+                                    <div class="btn-group shadow-sm">
+                                        <a href="edit.php?id=<?= $l['payment_id'] ?>" class="btn btn-sm btn-outline-info" title="Edytuj"><i class="fas fa-edit"></i></a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-payment-btn" data-id="<?= $l['payment_id'] ?>" title="Usuń">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                <?php else: ?>
+                                    <a href="add.php?user_id=<?= $l['id'] ?>" class="btn btn-sm btn-success px-4 rounded-pill">Opłać</a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -87,36 +133,34 @@ include $root . '/includes/sidebar.php';
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Obsługa usuwania
-    const deleteButtons = document.querySelectorAll('.delete-payment');
-    deleteButtons.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const id = this.getAttribute('data-id');
+    // 1. Obsługa nowoczesnego usuwania
+    document.querySelectorAll('.delete-payment-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const paymentId = this.getAttribute('data-id');
             
             Swal.fire({
-                title: 'Na pewno usunąć?',
-                text: "Nie odzyskasz tej wpłaty z bazy!",
+                title: 'Jesteś pewien?',
+                text: "Ta wpłata zostanie trwale usunięta z bazy.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#e74a3b',
                 cancelButtonColor: '#858796',
                 confirmButtonText: 'Tak, usuń!',
-                cancelButtonText: 'Anuluj'
+                cancelButtonText: 'Anuluj',
+                reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Sprawdzamy czy ścieżka jest dobra
-                    window.location.href = 'delete.php?id=' + id;
+                    window.location.href = 'delete.php?id=' + paymentId;
                 }
             });
         });
     });
 
-    // 2. Szukajka
+    // 2. Filtrowanie tabeli na żywo
     document.getElementById('liveSearch').addEventListener('keyup', function() {
         let val = this.value.toLowerCase();
         document.querySelectorAll('.payment-row').forEach(row => {
-            let name = row.querySelector('.user-name').innerText.toLowerCase();
+            let name = row.querySelector('.user-name-cell').innerText.toLowerCase();
             row.style.display = name.includes(val) ? '' : 'none';
         });
     });
@@ -124,14 +168,13 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <?php 
-// 3. Powiadomienia po akcji
+// Powiadomienia SweetAlert po akcjach
 if(isset($_GET['msg'])) {
     $msg = $_GET['msg'];
     $icon = ($msg == 'deleted') ? 'info' : 'success';
-    $title = ($msg == 'deleted') ? 'Usunięto' : 'Sukces';
+    $title = ($msg == 'deleted') ? 'Usunięto' : 'Zapisano';
     echo "<script>Swal.fire({ icon: '$icon', title: '$title', timer: 1500, showConfirmButton: false });</script>";
 }
 ?>
 
-<?php include $root . '/includes/header.php'; ?>
 <?php include $root . '/includes/footer.php'; ?>
