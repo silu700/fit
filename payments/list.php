@@ -110,11 +110,11 @@ include $root . '/includes/sidebar.php';
                                 <?php if($l['payment_id']): ?>
                                     <div class="btn-group">
                                         <a href="edit.php?id=<?= $l['payment_id'] ?>" class="btn btn-sm btn-outline-info border-0"><i class="fas fa-edit"></i></a>
-                                        <button type="button" 
-                                                class="btn btn-sm btn-outline-danger border-0 btn-modern-delete" 
-                                                data-id="<?= $l['payment_id'] ?>">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+										<button type="button" 
+												class="btn btn-sm btn-outline-danger border-0 super-unique-delete-class" 
+												data-id="<?= $l['payment_id'] ?>">
+											<i class="fas fa-trash"></i>
+										</button>
                                     </div>
                                 <?php else: ?>
                                     <a href="add.php?user_id=<?= $l['id'] ?>" class="btn btn-sm btn-success px-4 rounded-pill fw-bold shadow-sm">OPŁAĆ</a>
@@ -132,33 +132,29 @@ include $root . '/includes/sidebar.php';
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // 1. OBSŁUGA USUWANIA (TYLKO JEDNO OKNO!)
-    const deleteBtns = document.querySelectorAll('.btn-modern-delete');
-    deleteBtns.forEach(btn => {
+    // Używamy nowej, unikalnej klasy
+    document.querySelectorAll('.super-unique-delete-class').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
-            e.stopPropagation();
+            e.stopImmediatePropagation(); // Jeszcze silniejsze zatrzymanie innych skryptów
 
-            const paymentId = this.getAttribute('data-id');
-
+            const id = this.getAttribute('data-id');
             Swal.fire({
                 title: 'Potwierdź usunięcie',
-                text: "Czy na pewno chcesz skasować tę wpłatę z historii?",
+                text: "Wpłata zniknie z historii.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Tak, usuń!',
-                cancelButtonText: 'Anuluj',
-                reverseButtons: true
+                cancelButtonText: 'Anuluj'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = 'delete.php?id=' + paymentId;
+                    window.location.href = 'delete.php?id=' + id;
                 }
             });
         });
     });
+});
 
     // 2. SZUKAJKA NA ŻYWO
     const search = document.getElementById('liveSearch');
