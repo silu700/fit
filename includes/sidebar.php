@@ -12,7 +12,11 @@
         <a href="/users/list.php" class="list-group-item list-group-item-action bg-dark text-white">
             <i class="fas fa-users me-2"></i> Użytkownicy
         </a>
-
+		
+		<a href="/payments/index.php" class="list-group-item list-group-item-action bg-dark text-white">
+			<i class="fas fa-wallet me-2 text-success"></i> Płatności / Karnety
+		</a>
+		
         <a href="/groups/list.php" class="list-group-item list-group-item-action bg-dark text-white">
             <i class="fas fa-layer-group me-2"></i> Grupy
         </a>
