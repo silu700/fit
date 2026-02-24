@@ -16,8 +16,13 @@ $options = [
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
+    // Jeśli chcesz sprawdzić czy działa, odkomentuj linię niżej:
+    // echo "Połączono!"; 
 } catch (\PDOException $e) {
-    // W razie błędu wyświetl czytelny komunikat
-    die("Błąd połączenia z bazą danych: " . $e->getMessage());
+    echo "Błąd logowania!<br>";
+    echo "Użytkownik: " . $user . "<br>";
+    echo "Host: " . $host . "<br>";
+    echo "Szczegóły błędu: " . $e->getMessage();
+    exit;
 }
 ?>
