@@ -8,7 +8,7 @@ $root = dirname(__DIR__);
 require_once $root . '/config/db.php';
 
 try {
-    // Pobieramy użytkowników oraz listę ich grup z tabeli fit_user_groups
+    // Pobieramy użytkowników oraz listę ich grup (z tabeli łączącej)
     $sql = "SELECT u.*, 
             (SELECT GROUP_CONCAT(g.nazwa SEPARATOR '|') 
              FROM fit_groups g 
@@ -35,6 +35,10 @@ include $root . '/includes/sidebar.php';
         </a>
     </div>
 
+    <?php if(isset($_GET['msg']) && $_GET['msg'] == 'updated'): ?>
+        <div class="alert alert-success">Dane użytkownika zostały zaktualizowane!</div>
+    <?php endif; ?>
+
     <div class="card shadow mb-4">
         <div class="card-body">
             <div class="table-responsive">
@@ -50,7 +54,7 @@ include $root . '/includes/sidebar.php';
                     </thead>
                     <tbody>
                         <?php if (empty($users)): ?>
-                            <tr><td colspan="5" class="text-center py-4">Brak zarejestrowanych użytkowników.</td></tr>
+                            <tr><td colspan="5" class="text-center py-4">Brak użytkowników.</td></tr>
                         <?php else: ?>
                             <?php foreach ($users as $u): ?>
                             <tr>
@@ -78,11 +82,11 @@ include $root . '/includes/sidebar.php';
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group">
-                                        <a href="edit.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Edytuj">
-                                            <i class="fas fa-edit"></i>
+                                        <a href="edit.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-primary" title="Edytuj">
+                                            <i class="fas fa-edit"></i> Edytuj
                                         </a>
                                         <a href="delete.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-danger" 
-                                           onclick="return confirm('Czy na pewno chcesz usunąć tego użytkownika?')" title="Usuń">
+                                           onclick="return confirm('Usunąć?')">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </div>
