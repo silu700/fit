@@ -6,16 +6,23 @@ $user    = 'silu_bazy';
 $pass    = '^i;8#s-F0Tz-'; // Twoje hasło do bazy
 $charset = 'utf8mb4';
 
-$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+// Opcje PDO dla bezpieczeństwa i wygody
+$dsn = "mysql:host=$host;dbname=$db_name;charset=$charset";
 $options = [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    PDO::ATTR_EMULATE_PREPARES   => false,
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, // Pokazuj błędy
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,      // Zwracaj tablice asocjacyjne
+    PDO::ATTR_EMULATE_PREPARES   => false,                 // Używaj prawdziwych przygotowanych zapytań
 ];
 
 try {
-     $pdo = new PDO($dsn, $user, $pass, $options);
+    $pdo = new PDO($dsn, $user, $pass, $options);
+    // Jeśli chcesz sprawdzić czy działa, odkomentuj linię niżej:
+    // echo "Połączono!"; 
 } catch (\PDOException $e) {
-     throw new \PDOException($e->getMessage(), (int)$e->getCode());
+    echo "Błąd logowania!<br>";
+    echo "Użytkownik: " . $user . "<br>";
+    echo "Host: " . $host . "<br>";
+    echo "Szczegóły błędu: " . $e->getMessage();
+    exit;
 }
 ?>
