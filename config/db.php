@@ -1,7 +1,7 @@
 <?php
 // Ustawienia połączenia
 $host    = 'localhost';
-$db_name = 'silu_ksef';
+$db_name = 'silu_bazy';
 $user    = 'silu_ksef';
 $pass    = 'Ksef01234'; // Twoje hasło do bazy
 $charset = 'utf8mb4';

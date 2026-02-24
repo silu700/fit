@@ -1,38 +1,40 @@
-<?php
-require __DIR__ . '/../Models/Faktura.php';
-require __DIR__ . '/../../config/database.php'; // $pdo
+<div id="sidebar-wrapper">
+    <div class="sidebar-heading">
+        <i class="fas fa-heartbeat text-primary me-2"></i> FIT-PRO
+    </div>
+    <div class="list-group list-group-flush">
+        
+        <a href="/fit/index.php" class="list-group-item list-group-item-action">
+            <i class="fas fa-th-large me-2"></i> Dashboard
+        </a>
 
-class FakturaController {
-    private $fakturaModel;
+        <div class="sidebar-section">Klienci i Grupy</div>
+        <a href="/fit/users/list.php" class="list-group-item list-group-item-action">
+            <i class="fas fa-users me-2"></i> Lista Użytkowników
+        </a>
+        <a href="/fit/groups/list.php" class="list-group-item list-group-item-action">
+            <i class="fas fa-clock me-2"></i> Grupy (Godziny)
+        </a>
 
-    public function __construct() {
-        global $pdo;
-        $this->fakturaModel = new Faktura($pdo);
-    }
+        <div class="sidebar-section">Treningi</div>
+        <a href="/fit/exercises/list.php" class="list-group-item list-group-item-action">
+            <i class="fas fa-dumbbell me-2"></i> Baza Ćwiczeń
+        </a>
+        <a href="/fit/plans/list.php" class="list-group-item list-group-item-action">
+            <i class="fas fa-calendar-alt me-2"></i> Plany Treningowe
+        </a>
 
-    public function lista() {
-        $faktury = $this->fakturaModel->getAll();
-        $page_title = "Lista faktur";
-        ob_start();
-        include __DIR__ . '/../../views/faktury_lista.php';
-        $content = ob_get_clean();
-        include __DIR__ . '/../../views/layout.php';
-    }
+        <div class="sidebar-section">Finanse</div>
+        <a href="/fit/payments/list.php" class="list-group-item list-group-item-action">
+            <i class="fas fa-credit-card me-2"></i> Płatności
+        </a>
 
-    public function dodaj() {
-        $page_title = "Wystaw fakturę";
+    </div>
+</div>
 
-        if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $dane = $_POST['faktura'];
-            $pozycje = $_POST['pozycje'];
-            $this->fakturaModel->create($dane, $pozycje);
-            header("Location: index.php?page=faktury_lista");
-            exit;
-        }
-
-        ob_start();
-        include __DIR__ . '/../../views/faktury_dodaj.php';
-        $content = ob_get_clean();
-        include __DIR__ . '/../../views/layout.php';
-    }
-}
+<div id="page-content-wrapper">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 shadow-sm rounded">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1 text-muted small">System Siłowni v1.0</span>
+        </div>
+    </nav>
