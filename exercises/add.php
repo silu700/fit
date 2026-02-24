@@ -1,56 +1,63 @@
 <?php
-require_once '../config/db.php';
+$root = dirname(__DIR__);
+require_once $root . '/config/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nazwa = $_POST['nazwa'];
     $opis = $_POST['opis'];
-    $youtube = $_POST['youtube_link'];
+    $yt = $_POST['youtube_link'];
     $garmin = $_POST['garmin_exercise_link'];
-
-    $sql = "INSERT INTO fit_exercises (nazwa, opis, youtube_link, garmin_exercise_link) VALUES (?, ?, ?, ?)";
-    $stmt = $pdo->prepare($sql);
     
-    if ($stmt->execute([$nazwa, $opis, $youtube, $garmin])) {
-        header("Location: list.php?msg=success");
+    $image_name = null;
+
+    // Obsługa przesyłania obrazka
+    if (isset($_FILES['exercise_img']) && $_FILES['exercise_img']['error'] == 0) {
+        $ext = pathinfo($_FILES['exercise_img']['name'], PATHINFO_EXTENSION);
+        $image_name = time() . '_' . uniqid() . '.' . $ext;
+        $target = $root . '/uploads/exercises/' . $image_name;
+        
+        move_uploaded_file($_FILES['exercise_img']['tmp_name'], $target);
+    }
+
+    $stmt = $pdo->prepare("INSERT INTO fit_exercises (nazwa, opis, youtube_link, garmin_exercise_link, image_path) VALUES (?, ?, ?, ?, ?)");
+    if ($stmt->execute([$nazwa, $opis, $yt, $garmin, $image_name])) {
+        header("Location: list.php?msg=added");
         exit;
     }
 }
 
-include '../includes/header.php';
-include '../includes/sidebar.php';
+include $root . '/includes/header.php';
+include $root . '/includes/sidebar.php';
 ?>
 
 <div class="container-fluid">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Nowe Ćwiczenie</h6>
-        </div>
+    <div class="card shadow mb-4" style="max-width: 600px;">
+        <div class="card-header py-3 bg-dark text-white"><h5>Nowe Ćwiczenie z Obrazkiem</h5></div>
         <div class="card-body">
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Nazwa ćwiczenia</label>
-                    <input type="text" name="nazwa" class="form-control" placeholder="np. Przysiad ze sztangą" required>
+                    <label>Nazwa ćwiczenia</label>
+                    <input type="text" name="nazwa" class="form-control" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Opis / Technika</label>
-                    <textarea name="opis" class="form-control" rows="3"></textarea>
+                    <label>Obrazek pomocniczy (mały)</label>
+                    <input type="file" name="exercise_img" class="form-control" accept="image/*">
                 </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Link YouTube (Wideo)</label>
-                        <input type="url" name="youtube_link" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Link Garmin (Baza ćwiczeń)</label>
-                        <input type="url" name="garmin_exercise_link" class="form-control" placeholder="https://connect.garmin.com/...">
-                    </div>
+                <div class="mb-3">
+                    <label>Opis</label>
+                    <textarea name="opis" class="form-control" rows="2"></textarea>
                 </div>
-                <hr>
-                <button type="submit" class="btn btn-primary px-4">Zapisz ćwiczenie</button>
-                <a href="list.php" class="btn btn-outline-secondary">Anuluj</a>
+                <div class="mb-3">
+                    <label>YouTube Link</label>
+                    <input type="url" name="youtube_link" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>Garmin Link</label>
+                    <input type="url" name="garmin_exercise_link" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Zapisz ćwiczenie</button>
             </form>
         </div>
     </div>
 </div>
-
-<?php include '../includes/footer.php'; ?>
+<?php include $root . '/includes/footer.php'; ?>

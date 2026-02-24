@@ -42,6 +42,17 @@ include '../includes/sidebar.php';
                                     </a>
                                 <?php endif; ?>
                             </td>
+							<td>
+								<?php if ($ex['image_path']): ?>
+									<img src="/uploads/exercises/<?= $ex['image_path'] ?>" 
+										 style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;" 
+										 alt="foto">
+								<?php else: ?>
+									<div style="width: 50px; height: 50px; background: #eee; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+										<i class="fas fa-image text-muted"></i>
+									</div>
+								<?php endif; ?>
+							</td>
                             <td>
                                 <a href="edit.php?id=<?= $ex['id'] ?>" class="btn btn-sm btn-outline-secondary"><i class="fas fa-edit"></i></a>
                                 <a href="delete.php?id=<?= $ex['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Usunąć?')"><i class="fas fa-trash"></i></a>
