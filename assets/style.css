@@ -1,0 +1,94 @@
+/* Główne ustawienia */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
+    margin: 0;
+}
+
+#wrapper {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+}
+
+/* Sidebar - Styl Ciemny */
+#sidebar-wrapper {
+    min-height: 100vh;
+    width: 260px;
+    background: #2c3e50;
+    color: #ecf0f1;
+    transition: all 0.3s;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+.sidebar-heading {
+    padding: 1.5rem 1rem;
+    font-size: 1.25rem;
+    font-weight: bold;
+    text-align: center;
+    background: #1a252f;
+    border-bottom: 1px solid #34495e;
+}
+
+.sidebar-section {
+    padding: 15px 20px 5px;
+    font-size: 0.7rem;
+    text-uppercase;
+    color: #95a5a6;
+    letter-spacing: 1px;
+}
+
+.list-group-item {
+    background: transparent;
+    color: #bdc3c7;
+    border: none;
+    padding: 12px 20px;
+    transition: 0.2s;
+    text-decoration: none;
+    display: block;
+}
+
+.list-group-item:hover {
+    background: #34495e;
+    color: #fff;
+    padding-left: 25px;
+}
+
+.list-group-item i {
+    width: 25px;
+}
+
+/* Content Area */
+#page-content-wrapper {
+    width: 100%;
+    padding: 25px;
+}
+
+.navbar {
+    background: #fff !important;
+    border-bottom: 1px solid #e3e6f0;
+    margin-bottom: 25px;
+    padding: 15px 25px;
+}
+
+/* Karty Statystyk (Dashboard) */
+.card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.border-left-primary { border-left: 4px solid #4e73df !important; }
+.border-left-success { border-left: 4px solid #1cc88a !important; }
+.border-left-info    { border-left: 4px solid #36b9cc !important; }
+.border-left-warning { border-left: 4px solid #f6c23e !important; }
+
+/* Tabele */
+.table {
+    background: #fff;
+    border-radius: 8px;
+}
+
+.table thead {
+    background: #f8f9fc;
+}
