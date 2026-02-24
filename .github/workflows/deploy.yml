@@ -1,0 +1,23 @@
+name: Wyslij na serwer przez FTP
+
+on:
+  push:
+    branches:
+      - main  # Akcja uruchomi się tylko, gdy wypchniesz kod do gałęzi main
+
+jobs:
+  web-deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: Pobieranie kodu z repozytorium
+      uses: actions/checkout@v3
+
+    - name: Synchronizacja plików przez FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        # Opcjonalnie: ścieżka na serwerze, np. /public_html
+        # server-dir: ./public_html/
