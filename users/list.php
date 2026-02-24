@@ -1,18 +1,26 @@
 <?php
-// Wymuszamy pokazywanie błędów, żeby zamiast 500 zobaczyć opis błędu
+// Włączanie błędów dla debugowania
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Dynamiczne ustalanie ścieżki do katalogu głównego
 $root = dirname(__DIR__); 
-
 require_once $root . '/config/db.php';
 
 try {
-    $users = $pdo->query("SELECT u.*, g.nazwa as grupa_nazwa FROM fit_users u LEFT JOIN fit_groups g ON u.group_id = g.id ORDER BY u.id DESC")->fetchAll();
+    // Pobieramy użytkowników oraz listę ich grup z tabeli fit_user_groups
+    $sql = "SELECT u.*, 
+            (SELECT GROUP_CONCAT(g.nazwa SEPARATOR '|') 
+             FROM fit_groups g 
+             JOIN fit_user_groups ug ON g.id = ug.group_id 
+             WHERE ug.user_id = u.id) as grupy_nazwy
+            FROM fit_users u 
+            ORDER BY u.id DESC";
+            
+    $stmt = $pdo->query($sql);
+    $users = $stmt->fetchAll();
 } catch (PDOException $e) {
-    die("Błąd zapytania: " . $e->getMessage());
+    die("Błąd bazy danych: " . $e->getMessage());
 }
 
 include $root . '/includes/header.php';
@@ -21,29 +29,70 @@ include $root . '/includes/sidebar.php';
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Lista Klubowiczów</h2>
-        <a href="add.php" class="btn btn-primary">Dodaj użytkownika</a>
+        <h1 class="h3 mb-0 text-gray-800">Lista Klubowiczów</h1>
+        <a href="add.php" class="btn btn-primary shadow-sm">
+            <i class="fas fa-user-plus me-2"></i> Dodaj użytkownika
+        </a>
     </div>
-    <div class="card shadow">
+
+    <div class="card shadow mb-4">
         <div class="card-body">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Imię i Nazwisko</th>
-                        <th>Grupa</th>
-                        <th>Akcje</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($users as $u): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($u['imie'] . ' ' . $u['nazwisko']) ?></td>
-                        <td><?= htmlspecialchars($u['grupa_nazwa'] ?? 'Brak') ?></td>
-                        <td><a href="edit.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-info">Edytuj</a></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Klubowicz</th>
+                            <th>E-mail</th>
+                            <th>Przypisane Grupy</th>
+                            <th>Status</th>
+                            <th class="text-center">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($users)): ?>
+                            <tr><td colspan="5" class="text-center py-4">Brak zarejestrowanych użytkowników.</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($users as $u): ?>
+                            <tr>
+                                <td>
+                                    <div class="fw-bold"><?= htmlspecialchars($u['imie'] . ' ' . $u['nazwisko']) ?></div>
+                                    <small class="text-muted">ID: #<?= $u['id'] ?></small>
+                                </td>
+                                <td><?= htmlspecialchars($u['email']) ?></td>
+                                <td>
+                                    <?php 
+                                    if (!empty($u['grupy_nazwy'])) {
+                                        $grupy = explode('|', $u['grupy_nazwy']);
+                                        foreach ($grupy as $g) {
+                                            echo '<span class="badge bg-info text-dark me-1">' . htmlspecialchars($g) . '</span>';
+                                        }
+                                    } else {
+                                        echo '<span class="text-muted small italic">Brak przypisania</span>';
+                                    }
+                                    ?>
+                                </td>
+                                <td>
+                                    <span class="badge <?= $u['subscription_status'] == 'active' ? 'bg-success' : 'bg-danger' ?>">
+                                        <?= $u['subscription_status'] == 'active' ? 'Aktywny' : 'Nieaktywny' ?>
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <a href="edit.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Edytuj">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="delete.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-danger" 
+                                           onclick="return confirm('Czy na pewno chcesz usunąć tego użytkownika?')" title="Usuń">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
