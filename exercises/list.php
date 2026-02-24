@@ -1,38 +1,58 @@
 <?php
-require __DIR__ . '/../Models/Faktura.php';
-require __DIR__ . '/../../config/database.php'; // $pdo
+require_once '../config/db.php';
 
-class FakturaController {
-    private $fakturaModel;
+$exercises = $pdo->query("SELECT * FROM fit_exercises ORDER BY nazwa ASC")->fetchAll();
 
-    public function __construct() {
-        global $pdo;
-        $this->fakturaModel = new Faktura($pdo);
-    }
+include '../includes/header.php';
+include '../includes/sidebar.php';
+?>
 
-    public function lista() {
-        $faktury = $this->fakturaModel->getAll();
-        $page_title = "Lista faktur";
-        ob_start();
-        include __DIR__ . '/../../views/faktury_lista.php';
-        $content = ob_get_clean();
-        include __DIR__ . '/../../views/layout.php';
-    }
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Biblioteka Ćwiczeń</h1>
+        <a href="add.php" class="btn btn-primary shadow-sm">
+            <i class="fas fa-plus-circle me-2"></i> Dodaj ćwiczenie
+        </a>
+    </div>
 
-    public function dodaj() {
-        $page_title = "Wystaw fakturę";
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nazwa ćwiczenia</th>
+                            <th>Linki Video / Dane</th>
+                            <th>Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($exercises as $ex): ?>
+                        <tr>
+                            <td><strong><?= htmlspecialchars($ex['nazwa']) ?></strong></td>
+                            <td>
+                                <?php if($ex['youtube_link']): ?>
+                                    <a href="<?= $ex['youtube_link'] ?>" target="_blank" class="btn btn-sm btn-outline-danger">
+                                        <i class="fab fa-youtube"></i> YouTube
+                                    </a>
+                                <?php endif; ?>
+                                <?php if($ex['garmin_exercise_link']): ?>
+                                    <a href="<?= $ex['garmin_exercise_link'] ?>" target="_blank" class="btn btn-sm btn-outline-info text-dark">
+                                        <i class="fas fa-running"></i> Garmin
+                                    </a>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <a href="edit.php?id=<?= $ex['id'] ?>" class="btn btn-sm btn-outline-secondary"><i class="fas fa-edit"></i></a>
+                                <a href="delete.php?id=<?= $ex['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Usunąć?')"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
-        if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $dane = $_POST['faktura'];
-            $pozycje = $_POST['pozycje'];
-            $this->fakturaModel->create($dane, $pozycje);
-            header("Location: index.php?page=faktury_lista");
-            exit;
-        }
-
-        ob_start();
-        include __DIR__ . '/../../views/faktury_dodaj.php';
-        $content = ob_get_clean();
-        include __DIR__ . '/../../views/layout.php';
-    }
-}
+<?php include '../includes/footer.php'; ?>

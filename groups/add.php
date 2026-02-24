@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt = $pdo->prepare($sql);
     
     if ($stmt->execute([$nazwa, $godzina, $opis])) {
-        header("Location: list.php?msg=added");
+        header("Location: list.php?msg=success");
         exit;
     }
 }
@@ -20,36 +20,29 @@ include '../includes/sidebar.php';
 ?>
 
 <div class="container-fluid">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="../index.php">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="list.php">Grupy</a></li>
-            <li class="breadcrumb-item active">Nowa grupa</li>
-        </ol>
-    </nav>
-
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Dodaj nowy slot godzinowy (Grupę)</h6>
+        <div class="card-header py-3 bg-white text-primary">
+            <h6 class="m-0 font-weight-bold">Konfiguracja nowej grupy (Slotu)</h6>
         </div>
         <div class="card-body">
             <form method="POST">
                 <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Nazwa grupy</label>
-                        <input type="text" name="nazwa" class="form-control" placeholder="np. G1 lub Poranna" required>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Nazwa (np. G1, Poranna)</label>
+                        <input type="text" name="nazwa" class="form-control" required placeholder="np. G1">
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">Godzina zajęć</label>
                         <input type="time" name="godzina" class="form-control" required>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Opis (opcjonalnie)</label>
-                        <input type="text" name="opis" class="form-control" placeholder="np. Grupa zaawansowana">
-                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary mt-2">Zapisz grupę</button>
-                <a href="list.php" class="btn btn-secondary mt-2">Anuluj</a>
+                <div class="mb-3">
+                    <label class="form-label">Opis dodatkowy</label>
+                    <textarea name="opis" class="form-control" rows="2" placeholder="Opcjonalny opis..."></textarea>
+                </div>
+                <hr>
+                <button type="submit" class="btn btn-primary px-4">Zapisz grupę</button>
+                <a href="list.php" class="btn btn-outline-secondary">Anuluj</a>
             </form>
         </div>
     </div>
