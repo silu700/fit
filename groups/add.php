@@ -1,51 +1,45 @@
 <?php
-require_once '../config/db.php';
+$root = dirname(__DIR__);
+require_once $root . '/config/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nazwa = $_POST['nazwa'];
-    $godzina = $_POST['godzina'];
     $opis = $_POST['opis'];
 
-    $sql = "INSERT INTO fit_groups (nazwa, godzina, opis) VALUES (?, ?, ?)";
-    $stmt = $pdo->prepare($sql);
-    
-    if ($stmt->execute([$nazwa, $godzina, $opis])) {
+    $stmt = $pdo->prepare("INSERT INTO fit_groups (nazwa, opis) VALUES (?, ?)");
+    if ($stmt->execute([$nazwa, $opis])) {
         header("Location: list.php?msg=success");
         exit;
     }
 }
 
-include '../includes/header.php';
-include '../includes/sidebar.php';
+include $root . '/includes/header.php';
+include $root . '/includes/sidebar.php';
 ?>
 
 <div class="container-fluid">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 bg-white text-primary">
-            <h6 class="m-0 font-weight-bold">Konfiguracja nowej grupy (Slotu)</h6>
+    <div class="card shadow mb-4" style="max-width: 600px;">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">Dodaj nową kategorię grupy</h6>
         </div>
         <div class="card-body">
             <form method="POST">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Nazwa (np. G1, Poranna)</label>
-                        <input type="text" name="nazwa" class="form-control" required placeholder="np. G1">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Godzina zajęć</label>
-                        <input type="time" name="godzina" class="form-control" required>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label">Nazwa Grupy</label>
+                    <input type="text" name="nazwa" class="form-control" placeholder="np. Zawodnicy BJJ" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Opis dodatkowy</label>
-                    <textarea name="opis" class="form-control" rows="2" placeholder="Opcjonalny opis..."></textarea>
+                    <label class="form-label">Opis / Uwagi</label>
+                    <textarea name="opis" class="form-control" rows="3" placeholder="Dodatkowe informacje o poziomie zaawansowania itp."></textarea>
                 </div>
                 <hr>
-                <button type="submit" class="btn btn-primary px-4">Zapisz grupę</button>
-                <a href="list.php" class="btn btn-outline-secondary">Anuluj</a>
+                <div class="d-flex justify-content-between">
+                    <a href="list.php" class="btn btn-secondary">Wróć</a>
+                    <button type="submit" class="btn btn-success px-4">Zapisz</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php include $root . '/includes/footer.php'; ?>
