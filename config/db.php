@@ -2,8 +2,8 @@
 // Ustawienia połączenia
 $host    = 'localhost';
 $db_name = 'silu_bazy';
-$user    = 'silu_ksef';
-$pass    = 'Ksef01234'; // Twoje hasło do bazy
+$user    = 'silu_bazy';
+$pass    = '^i;8#s-F0Tz-'; // Twoje hasło do bazy
 $charset = 'utf8mb4';
 
 // Opcje PDO dla bezpieczeństwa i wygody
