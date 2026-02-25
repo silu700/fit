@@ -73,20 +73,34 @@ include $root . '/includes/sidebar.php';
         </div>
     </div>
 
-<div class="row mb-3">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center bg-white p-2 border rounded shadow-sm">
-            <div class="ms-3">
-                <span class="text-muted small text-uppercase fw-bold me-2">Statystyki miesiąca:</span>
-                <span class="badge bg-primary me-2">Zebrano: <strong><?= number_format($total_collected, 2, ',', ' ') ?> PLN</strong></span>
-                <span class="badge bg-info text-dark">Opłacone: <strong><?= $paid_count ?> / <?= count($list) ?></strong></span>
-            </div>
-            <div class="me-3">
-                <span class="text-muted small italic">Dane dla okresu: <?= str_pad($m, 2, '0', STR_PAD_LEFT) ?>/<?= $r ?></span>
-            </div>
-        </div>
-    </div>
-</div>
+	<div class="row mb-3">
+		<div class="col-12">
+			<div class="d-flex justify-content-between align-items-center bg-white p-2 border rounded shadow-sm">
+				<div class="ms-3 d-flex align-items-center">
+					<span class="text-muted small text-uppercase fw-bold me-3">Statystyki:</span>
+					
+					<div class="me-4">
+						<span class="text-secondary small">Suma wpłat:</span>
+						<span class="fs-5 fw-bold text-primary ms-1">
+							<?= number_format($total_collected, 2, ',', ' ') ?> PLN
+						</span>
+					</div>
+
+					<div>
+						<span class="text-secondary small">Opłacone:</span>
+						<span class="fs-5 fw-bold text-info ms-1">
+							<?= $paid_count ?> / <?= count($list) ?>
+						</span>
+					</div>
+				</div>
+				<div class="me-3">
+					<span class="badge bg-light text-dark border">
+						Okres: <?= str_pad($m, 2, '0', STR_PAD_LEFT) ?>/<?= $r ?>
+					</span>
+				</div>
+			</div>
+		</div>
+	</div>
 
     <div class="card shadow mb-4">
         <div class="card-body p-0">
