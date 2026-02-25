@@ -88,11 +88,6 @@ include $root . '/includes/sidebar.php';
                 <span class="text-muted small text-uppercase fw-bold">Brak wpłat:</span>
                 <span class="ms-2 fs-5 fw-bold text-danger"><?= $nieoplacone_count ?> osób</span>
             </div>
-            <div class="col-md-2 text-end">
-                <a href="add.php" class="btn btn-sm btn-primary shadow-sm">
-                    <i class="fas fa-plus"></i> Nowa wpłata
-                </a>
-            </div>
         </div>
     </div>
 </div>
