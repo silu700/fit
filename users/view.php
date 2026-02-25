@@ -1,161 +1,97 @@
 <?php
-// 1. Włączamy raportowanie błędów - to pokaże nam co dokładnie "boli" skrypt
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 $root = dirname(__DIR__);
 require_once $root . '/config/db.php';
 
-// Pobieramy ID z adresu URL
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-if ($id === 0) {
-    die("Błąd: Nieprawidłowe ID użytkownika.");
-}
+// 1. Podstawowe dane i grupy
+$sql = "SELECT u.*, 
+        (SELECT GROUP_CONCAT(g.nazwa SEPARATOR '|') FROM fit_groups g 
+         JOIN fit_user_groups ug ON g.id = ug.group_id WHERE ug.user_id = u.id) as grupy
+        FROM fit_users u WHERE u.id = ?";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$id]);
+$user = $stmt->fetch();
 
-try {
-    // 2. Pobieramy dane użytkownika wraz z jego grupami
-    // Upewnij się, że tabele nazywają się fit_users, fit_groups i fit_user_groups
-    $sql = "SELECT u.*, 
-            (SELECT GROUP_CONCAT(g.nazwa SEPARATOR '|') 
-             FROM fit_groups g 
-             JOIN fit_user_groups ug ON g.id = ug.group_id 
-             WHERE ug.user_id = u.id) as grupy
-            FROM fit_users u 
-            WHERE u.id = ?";
-            
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$id]);
-    $user = $stmt->fetch();
+if (!$user) die("Nie znaleziono użytkownika.");
 
-    if (!$user) {
-        die("Błąd: Użytkownik o ID $id nie istnieje.");
-    }
+// 2. Historia ostatnich 5 wpłat
+$payments = $pdo->prepare("SELECT * FROM fit_payments WHERE user_id = ? ORDER BY rok DESC, miesiac DESC LIMIT 5");
+$payments->execute([$id]);
+$payment_history = $payments->fetchAll();
 
-    // 3. Historia ostatnich 5 wpłat
-    $stmt_p = $pdo->prepare("SELECT * FROM fit_payments WHERE user_id = ? ORDER BY rok DESC, miesiac DESC LIMIT 5");
-    $stmt_p->execute([$id]);
-    $payment_history = $stmt_p->fetchAll();
-
-    // 4. Pobieramy plany treningowe (jeśli tabela fit_plans już istnieje)
-    // Jeśli jeszcze nie stworzyłeś tabeli fit_plans, zakomentuj te linie poniżej
-    $user_plans = [];
-    $stmt_plans = $pdo->prepare("SHOW TABLES LIKE 'fit_plans'");
-    $stmt_plans->execute();
-    if($stmt_plans->rowCount() > 0) {
-        $stmt_pl = $pdo->prepare("SELECT * FROM fit_plans WHERE user_id = ? ORDER BY data_stworzenia DESC");
-        $stmt_pl->execute([$id]);
-        $user_plans = $stmt_pl->fetchAll();
-    }
-
-} catch (PDOException $e) {
-    die("Błąd bazy danych: " . $e->getMessage());
-}
+// 3. Plany treningowe
+$plans = $pdo->prepare("SELECT * FROM fit_plans WHERE user_id = ? ORDER BY data_stworzenia DESC");
+$plans->execute([$id]);
+$user_plans = $plans->fetchAll();
 
 include $root . '/includes/header.php';
 include $root . '/includes/sidebar.php';
 ?>
 
 <div class="container-fluid">
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="list.php">Użytkownicy</a></li>
-        <li class="breadcrumb-item active">Profil użytkownika</li>
-      </ol>
-    </nav>
-
     <div class="row">
-        <div class="col-xl-4 col-lg-5">
+        <div class="col-md-4">
             <div class="card shadow mb-4">
                 <div class="card-body text-center">
                     <div class="mb-3">
-                        <img src="https://ui-avatars.com/api/?name=<?= urlencode($user['imie'].'+'.$user['nazwisko']) ?>&size=128&background=random" class="rounded-circle shadow-sm">
+                        <i class="fas fa-user-circle fa-5x text-secondary"></i>
                     </div>
-                    <h4 class="mb-1"><?= htmlspecialchars($user['imie'] . ' ' . $user['nazwisko']) ?></h4>
-                    <p class="text-muted small mb-3"><?= htmlspecialchars($user['email']) ?></p>
-                    <div class="mb-3">
-                        <span class="badge <?= $user['subscription_status'] == 'active' ? 'bg-success' : 'bg-danger' ?> p-2 px-3">
-                            <?= $user['subscription_status'] == 'active' ? 'Aktywny' : 'Nieaktywny' ?>
-                        </span>
-                    </div>
+                    <h4><?= htmlspecialchars($user['imie'] . ' ' . $user['nazwisko']) ?></h4>
+                    <span class="badge <?= $user['subscription_status'] == 'active' ? 'bg-success' : 'bg-danger' ?> mb-3">
+                        <?= $user['subscription_status'] == 'active' ? 'Aktywny' : 'Nieaktywny' ?>
+                    </span>
                     <hr>
-                    <div class="text-start px-3">
-                        <label class="text-xs font-weight-bold text-uppercase text-muted mb-1">Przypisane Grupy</label>
-                        <div>
+                    <div class="text-start">
+                        <p><strong>E-mail:</strong> <?= htmlspecialchars($user['email']) ?></p>
+                        <p><strong>Grupy:</strong><br>
                             <?php 
-                            if (!empty($user['grupy'])) {
-                                $grupy = explode('|', $user['grupy']);
-                                foreach ($grupy as $g) {
-                                    echo '<span class="badge bg-light text-dark border me-1 mb-1">' . htmlspecialchars($g) . '</span>';
-                                }
-                            } else {
-                                echo '<p class="text-muted small italic">Brak przypisania do grup</p>';
-                            }
+                            if ($user['grupy']) {
+                                foreach(explode('|', $user['grupy']) as $g) echo '<span class="badge bg-info text-dark me-1">'.$g.'</span>';
+                            } else echo "Brak przypisania";
                             ?>
-                        </div>
+                        </p>
                     </div>
-                    <div class="mt-4">
-                        <a href="edit.php?id=<?= $id ?>" class="btn btn-outline-primary btn-sm w-100 mb-2">Edytuj Dane</a>
-                    </div>
+                    <a href="edit.php?id=<?= $id ?>" class="btn btn-primary btn-sm w-100 mt-2">Edytuj profil</a>
                 </div>
             </div>
 
             <div class="card shadow mb-4">
-                <div class="card-header py-3 bg-success text-white">
-                    <h6 class="m-0 font-weight-bold">Historia ostatnich wpłat</h6>
-                </div>
+                <div class="card-header bg-success text-white">Ostatnie wpłaty</div>
                 <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        <?php if(empty($payment_history)): ?>
-                            <li class="list-group-item text-center text-muted small">Brak historii wpłat.</li>
-                        <?php else: ?>
-                            <?php foreach($payment_history as $p): ?>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>Miesiąc: <strong><?= $p['miesiac'] ?>/<?= $p['rok'] ?></strong></span>
-                                <span class="badge bg-light text-dark border"><?= $p['kwota'] ?> PLN</span>
-                            </li>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </ul>
+                    <table class="table table-sm m-0">
+                        <?php foreach($payment_history as $p): ?>
+                        <tr>
+                            <td class="ps-3"><?= $p['miesiac'] ?>/<?= $p['rok'] ?></td>
+                            <td class="fw-bold"><?= $p['kwota'] ?> PLN</td>
+                            <td><i class="fas fa-check-circle text-success"></i></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-8 col-lg-7">
+        <div class="col-md-8">
             <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-dark text-white">
-                    <h6 class="m-0 font-weight-bold text-white">Plany Treningowe</h6>
-                    <a href="../plans/add.php?user_id=<?= $id ?>" class="btn btn-sm btn-outline-light">Stwórz nowy plan</a>
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold">Plany Treningowe</h6>
+                    <a href="../plans/add.php?user_id=<?= $id ?>" class="btn btn-sm btn-light">+ Nowy Plan</a>
                 </div>
                 <div class="card-body">
                     <?php if(empty($user_plans)): ?>
-                        <div class="text-center py-5">
-                            <i class="fas fa-clipboard-list fa-3x text-light mb-3"></i>
-                            <p class="text-muted">Ten użytkownik nie posiada jeszcze planów treningowych.</p>
-                        </div>
+                        <p class="text-muted">Ten użytkownik nie ma jeszcze przypisanych planów.</p>
                     <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Nazwa planu</th>
-                                        <th>Data utworzenia</th>
-                                        <th class="text-end">Akcje</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach($user_plans as $plan): ?>
-                                    <tr>
-                                        <td><strong><?= htmlspecialchars($plan['nazwa_planu']) ?></strong></td>
-                                        <td><?= date('d.m.Y', strtotime($plan['data_stworzenia'])) ?></td>
-                                        <td class="text-end">
-                                            <a href="../plans/view.php?id=<?= $plan['id'] ?>" class="btn btn-sm btn-info text-white">Zobacz</a>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                        <div class="list-group">
+                            <?php foreach($user_plans as $plan): ?>
+                                <a href="../plans/view.php?id=<?= $plan['id'] ?>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-file-alt me-2 text-primary"></i>
+                                        <strong><?= htmlspecialchars($plan['nazwa_planu']) ?></strong>
+                                    </div>
+                                    <small class="text-muted">Utworzono: <?= date('d.m.Y', strtotime($plan['data_stworzenia'])) ?></small>
+                                </a>
+                            <?php endforeach; ?>
                         </div>
                     <?php endif; ?>
                 </div>
