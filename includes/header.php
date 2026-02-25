@@ -15,7 +15,6 @@
         .list-group-item:hover { background: #343a40; color: #fff; }
         .sidebar-heading { padding: 20px; font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid #3e444a; }
     </style>
-	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 <div id="wrapper">
