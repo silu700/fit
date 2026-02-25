@@ -1,37 +1,23 @@
 <?php
-// Włączamy błędy, żebyś widział co jest nie tak, jeśli znowu "puknie"
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
 $root = dirname(__DIR__); 
 require_once $root . '/config/db.php';
 
-// Sprawdzamy czy ID jest w ogóle przekazane w linku
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-
-if ($id === 0) {
-    // Jeśli nie ma ID, to faktycznie nie ma kogo edytować
-    die("Błąd: Nie podano ID użytkownika.");
-}
+if ($id === 0) { die("Błąd: Nie podano ID."); }
 
 // 1. Pobieramy dane użytkownika
 $stmt = $pdo->prepare("SELECT * FROM fit_users WHERE id = ?");
 $stmt->execute([$id]);
 $user = $stmt->fetch();
+if (!$user) { die("Błąd: Użytkownik nie istnieje."); }
 
-if (!$user) {
-    die("Błąd: Użytkownik o ID $id nie istnieje w bazie.");
-}
-
-// 2. Pobieramy wszystkie dostępne grupy
+// 2. Pobieramy grupy
 $groups = $pdo->query("SELECT * FROM fit_groups ORDER BY nazwa ASC")->fetchAll();
+$stmt_my = $pdo->prepare("SELECT group_id FROM fit_user_groups WHERE user_id = ?");
+$stmt_my->execute([$id]);
+$my_groups = $stmt_my->fetchAll(PDO::FETCH_COLUMN);
 
-// 3. Pobieramy ID grup, do których użytkownik należy
-$stmt_my_groups = $pdo->prepare("SELECT group_id FROM fit_user_groups WHERE user_id = ?");
-$stmt_my_groups->execute([$id]);
-$my_groups = $stmt_my_groups->fetchAll(PDO::FETCH_COLUMN);
-
-// 4. Obsługa zapisu
+// 3. Zapis zmian
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $imie = $_POST['imie'];
     $nazwisko = $_POST['nazwisko'];
@@ -41,22 +27,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $pdo->beginTransaction();
     try {
-        $sql_u = "UPDATE fit_users SET imie = ?, nazwisko = ?, email = ?, subscription_status = ? WHERE id = ?";
-        $pdo->prepare($sql_u)->execute([$imie, $nazwisko, $email, $status, $id]);
+        $stmt = $pdo->prepare("UPDATE fit_users SET imie = ?, nazwisko = ?, email = ?, subscription_status = ? WHERE id = ?");
+        $stmt->execute([$imie, $nazwisko, $email, $status, $id]);
 
         $pdo->prepare("DELETE FROM fit_user_groups WHERE user_id = ?")->execute([$id]);
-
-        $stmt_link = $pdo->prepare("INSERT INTO fit_user_groups (user_id, group_id) VALUES (?, ?)");
-        foreach ($selected_groups as $g_id) {
-            $stmt_link->execute([$id, $g_id]);
-        }
+        $ins = $pdo->prepare("INSERT INTO fit_user_groups (user_id, group_id) VALUES (?, ?)");
+        foreach ($selected_groups as $g_id) { $ins->execute([$id, $g_id]); }
 
         $pdo->commit();
         header("Location: list.php?msg=updated");
         exit;
     } catch (Exception $e) {
         $pdo->rollBack();
-        die("Błąd zapisu: " . $e->getMessage());
+        die("Błąd: " . $e->getMessage());
     }
 }
 
@@ -64,47 +47,55 @@ include $root . '/includes/header.php';
 include $root . '/includes/sidebar.php';
 ?>
 
-<div class="container-fluid">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Edycja: <?= htmlspecialchars($user['imie'] . ' ' . $user['nazwisko']) ?></h6>
+<div class="container-fluid d-flex justify-content-center align-items-center" style="min-height: 80vh; padding: 20px 0;">
+    <div class="card shadow border-0" style="width: 100%; max-width: 550px;">
+        <div class="card-header bg-primary text-white py-3">
+            <h6 class="m-0 fw-bold"><i class="fas fa-user-edit me-2"></i>Edytuj Użytkownika</h6>
         </div>
-        <div class="card-body">
+        <div class="card-body p-4">
             <form method="POST">
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label>Imię</label>
+                        <label class="form-label small fw-bold text-uppercase">Imię</label>
                         <input type="text" name="imie" class="form-control" value="<?= htmlspecialchars($user['imie']) ?>" required>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label>Nazwisko</label>
+                        <label class="form-label small fw-bold text-uppercase">Nazwisko</label>
                         <input type="text" name="nazwisko" class="form-control" value="<?= htmlspecialchars($user['nazwisko']) ?>" required>
                     </div>
                 </div>
+
                 <div class="mb-3">
-                    <label>E-mail</label>
+                    <label class="form-label small fw-bold text-uppercase">Email</label>
                     <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" required>
                 </div>
+
                 <div class="mb-3">
-                    <label>Status</label>
+                    <label class="form-label small fw-bold text-uppercase">Status konta</label>
                     <select name="status" class="form-select">
                         <option value="active" <?= $user['subscription_status'] == 'active' ? 'selected' : '' ?>>Aktywny</option>
                         <option value="inactive" <?= $user['subscription_status'] == 'inactive' ? 'selected' : '' ?>>Nieaktywny</option>
                     </select>
                 </div>
-                <div class="mb-3">
-                    <label class="fw-bold">Grupy:</label>
-                    <div class="border p-3 rounded bg-light">
+
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-uppercase">Przypisane Grupy</label>
+                    <div class="border p-3 rounded bg-light" style="max-height: 150px; overflow-y: auto;">
                         <?php foreach($groups as $g): ?>
-                            <div class="form-check">
+                            <div class="form-check mb-1">
                                 <input class="form-check-input" type="checkbox" name="groups[]" value="<?= $g['id'] ?>" id="g<?= $g['id'] ?>" <?= in_array($g['id'], $my_groups) ? 'checked' : '' ?>>
-                                <label class="form-check-label" for="g<?= $g['id'] ?>"><?= htmlspecialchars($g['nazwa']) ?></label>
+                                <label class="form-check-label" for="g<?= $g['id'] ?> small"><?= htmlspecialchars($g['nazwa']) ?></label>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
-                <a href="list.php" class="btn btn-secondary">Anuluj</a>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                        <i class="fas fa-save me-2"></i>Zapisz zmiany
+                    </button>
+                    <a href="list.php" class="btn btn-link text-muted mt-1">Anuluj</a>
+                </div>
             </form>
         </div>
     </div>

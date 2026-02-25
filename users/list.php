@@ -1,117 +1,58 @@
 <?php
-// Włączanie błędów dla debugowania
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 $root = dirname(__DIR__); 
 require_once $root . '/config/db.php';
 
-try {
-    // Pobieramy użytkowników oraz listę ich grup z tabeli łączącej
-    $sql = "SELECT u.*, 
-            (SELECT GROUP_CONCAT(g.nazwa SEPARATOR '|') 
-             FROM fit_groups g 
-             JOIN fit_user_groups ug ON g.id = ug.group_id 
-             WHERE ug.user_id = u.id) as grupy_nazwy
-            FROM fit_users u 
-            ORDER BY u.id DESC";
-            
-    $stmt = $pdo->query($sql);
-    $users = $stmt->fetchAll();
-} catch (PDOException $e) {
-    die("Błąd bazy danych: " . $e->getMessage());
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $imie = $_POST['imie'];
+    $nazwisko = $_POST['nazwisko'];
+    $email = $_POST['email'];
+    $status = $_POST['status'];
+
+    try {
+        $stmt = $pdo->prepare("INSERT INTO fit_users (imie, nazwisko, email, subscription_status) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$imie, $nazwisko, $email, $status]);
+        header("Location: list.php?msg=added");
+        exit;
+    } catch (Exception $e) {
+        die("Błąd: " . $e->getMessage());
+    }
 }
 
 include $root . '/includes/header.php';
 include $root . '/includes/sidebar.php';
 ?>
 
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Lista Użytkowników</h1>
-        <a href="add.php" class="btn btn-primary shadow-sm">
-            <i class="fas fa-user-plus me-2"></i> Dodaj Użytkownika
-        </a>
-    </div>
-
-    <?php if(isset($_GET['msg'])): ?>
-        <?php if($_GET['msg'] == 'updated'): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                Dane użytkownika zostały zaktualizowane!
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php elseif($_GET['msg'] == 'added'): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                Nowy użytkownik został dodany pomyślnie.
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
-    <?php endif; ?>
-
-    <div class="card shadow mb-4">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Użytkownik</th>
-                            <th>E-mail</th>
-                            <th>Przypisane Grupy</th>
-                            <th>Status</th>
-                            <th class="text-center">Akcje</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($users)): ?>
-                            <tr><td colspan="5" class="text-center py-4">Brak zarejestrowanych użytkowników.</td></tr>
-                        <?php else: ?>
-                            <?php foreach ($users as $u): ?>
-                            <tr>
-                                <td>
-                                    <a href="view.php?id=<?= $u['id'] ?>" class="text-decoration-none text-dark fw-bold">
-                                        <?= htmlspecialchars($u['imie'] . ' ' . $u['nazwisko']) ?>
-                                    </a>
-                                    <br><small class="text-muted">ID: #<?= $u['id'] ?></small>
-                                </td>
-                                <td><?= htmlspecialchars($u['email']) ?></td>
-                                <td>
-                                    <?php 
-                                    if (!empty($u['grupy_nazwy'])) {
-                                        $grupy = explode('|', $u['grupy_nazwy']);
-                                        foreach ($grupy as $g) {
-                                            echo '<span class="badge bg-info text-dark me-1">' . htmlspecialchars($g) . '</span>';
-                                        }
-                                    } else {
-                                        echo '<span class="text-muted small italic">Brak przypisania</span>';
-                                    }
-                                    ?>
-                                </td>
-                                <td>
-                                    <span class="badge <?= $u['subscription_status'] == 'active' ? 'bg-success' : 'bg-danger' ?>">
-                                        <?= $u['subscription_status'] == 'active' ? 'Aktywny' : 'Nieaktywny' ?>
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="btn-group">
-                                        <a href="view.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Podgląd">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="edit.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-primary" title="Edytuj">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="delete.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-danger" 
-                                           onclick="return confirm('Czy na pewno chcesz usunąć tego użytkownika? Operacja jest nieodwracalna.')" title="Usuń">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+<div class="container-fluid d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow border-0" style="width: 100%; max-width: 500px;">
+        <div class="card-header bg-success text-white py-3">
+            <h6 class="m-0 fw-bold"><i class="fas fa-user-plus me-2"></i>Dodaj Nowego Użytkownika</h6>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-uppercase">Imię</label>
+                    <input type="text" name="imie" class="form-control" placeholder="np. Jan" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-uppercase">Nazwisko</label>
+                    <input type="text" name="nazwisko" class="form-control" placeholder="np. Kowalski" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-uppercase">Email</label>
+                    <input type="email" name="email" class="form-control" placeholder="jan@kowalski.pl" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-uppercase">Status</label>
+                    <select name="status" class="form-select text-success fw-bold">
+                        <option value="active">Aktywny</option>
+                        <option value="inactive">Nieaktywny</option>
+                    </select>
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success btn-lg shadow-sm">Utwórz użytkownika</button>
+                    <a href="list.php" class="btn btn-link text-muted">Wróć do listy</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
