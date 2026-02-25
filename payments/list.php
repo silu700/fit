@@ -73,32 +73,20 @@ include $root . '/includes/sidebar.php';
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-xl-6 col-md-6 mb-2">
-            <div class="card border-left-success shadow h-100 py-2 bg-success text-white">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2 text-center">
-                            <div class="text-xs font-weight-bold text-uppercase mb-1">Zebrane wpłaty w tym miesiącu</div>
-                            <div class="h3 mb-0 font-weight-bold"><?= number_format($suma_wplat, 2, ',', ' ') ?> PLN</div>
-                        </div>
-                    </div>
-                </div>
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center bg-white p-2 border rounded shadow-sm">
+            <div class="ms-3">
+                <span class="text-muted small text-uppercase fw-bold me-2">Statystyki miesiąca:</span>
+                <span class="badge bg-primary me-2">Zebrano: <strong><?= number_format($total_collected, 2, ',', ' ') ?> PLN</strong></span>
+                <span class="badge bg-info text-dark">Opłacone: <strong><?= $paid_count ?> / <?= count($list) ?></strong></span>
             </div>
-        </div>
-        <div class="col-xl-6 col-md-6 mb-2">
-            <div class="card border-left-danger shadow h-100 py-2 bg-danger text-white">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2 text-center">
-                            <div class="text-xs font-weight-bold text-uppercase mb-1">Użytkownicy bez wpłaty</div>
-                            <div class="h3 mb-0 font-weight-bold"><?= $nieoplacone_count ?> osób</div>
-                        </div>
-                    </div>
-                </div>
+            <div class="me-3">
+                <span class="text-muted small italic">Dane dla okresu: <?= str_pad($m, 2, '0', STR_PAD_LEFT) ?>/<?= $r ?></span>
             </div>
         </div>
     </div>
+</div>
 
     <div class="card shadow mb-4">
         <div class="card-body p-0">
