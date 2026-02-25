@@ -8,7 +8,7 @@ $root = dirname(__DIR__);
 require_once $root . '/config/db.php';
 
 try {
-    // Pobieramy użytkowników oraz listę ich grup z tabeli łączącej
+    // Pobieramy użytkowników oraz listę ich grup (z tabeli łączącej)
     $sql = "SELECT u.*, 
             (SELECT GROUP_CONCAT(g.nazwa SEPARATOR '|') 
              FROM fit_groups g 
@@ -29,24 +29,14 @@ include $root . '/includes/sidebar.php';
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Lista Użytkowników</h1>
+        <h1 class="h3 mb-0 text-gray-800">Lista Klubowiczów</h1>
         <a href="add.php" class="btn btn-primary shadow-sm">
-            <i class="fas fa-user-plus me-2"></i> Dodaj Użytkownika
+            <i class="fas fa-user-plus me-2"></i> Dodaj użytkownika
         </a>
     </div>
 
-    <?php if(isset($_GET['msg'])): ?>
-        <?php if($_GET['msg'] == 'updated'): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                Dane użytkownika zostały zaktualizowane!
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php elseif($_GET['msg'] == 'added'): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                Nowy użytkownik został dodany pomyślnie.
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
+    <?php if(isset($_GET['msg']) && $_GET['msg'] == 'updated'): ?>
+        <div class="alert alert-success">Dane użytkownika zostały zaktualizowane!</div>
     <?php endif; ?>
 
     <div class="card shadow mb-4">
@@ -55,7 +45,7 @@ include $root . '/includes/sidebar.php';
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>Użytkownik</th>
+                            <th>Klubowicz</th>
                             <th>E-mail</th>
                             <th>Przypisane Grupy</th>
                             <th>Status</th>
@@ -64,15 +54,13 @@ include $root . '/includes/sidebar.php';
                     </thead>
                     <tbody>
                         <?php if (empty($users)): ?>
-                            <tr><td colspan="5" class="text-center py-4">Brak zarejestrowanych użytkowników.</td></tr>
+                            <tr><td colspan="5" class="text-center py-4">Brak użytkowników.</td></tr>
                         <?php else: ?>
                             <?php foreach ($users as $u): ?>
                             <tr>
                                 <td>
-                                    <a href="view.php?id=<?= $u['id'] ?>" class="text-decoration-none text-dark fw-bold">
-                                        <?= htmlspecialchars($u['imie'] . ' ' . $u['nazwisko']) ?>
-                                    </a>
-                                    <br><small class="text-muted">ID: #<?= $u['id'] ?></small>
+                                    <div class="fw-bold"><?= htmlspecialchars($u['imie'] . ' ' . $u['nazwisko']) ?></div>
+                                    <small class="text-muted">ID: #<?= $u['id'] ?></small>
                                 </td>
                                 <td><?= htmlspecialchars($u['email']) ?></td>
                                 <td>
@@ -94,14 +82,11 @@ include $root . '/includes/sidebar.php';
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group">
-                                        <a href="view.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Podgląd">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
                                         <a href="edit.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-primary" title="Edytuj">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="fas fa-edit"></i> Edytuj
                                         </a>
                                         <a href="delete.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-danger" 
-                                           onclick="return confirm('Czy na pewno chcesz usunąć tego użytkownika? Operacja jest nieodwracalna.')" title="Usuń">
+                                           onclick="return confirm('Usunąć?')">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </div>
