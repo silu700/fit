@@ -32,8 +32,8 @@ include $root . '/includes/sidebar.php';
 ?>
 
 <div class="container-fluid pt-4"> <div class="card shadow border-0 mx-auto" style="max-width: 550px;">
-        <div class="card-header bg-primary text-white py-3">
-            <h6 class="m-0 fw-bold"><i class="fas fa-user-plus me-2"></i>Dodaj Nowego Użytkownika</h6>
+        <div class="card-header py-3 bg-primary text-white d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold""><i class="fas fa-user-plus me-2"></i>Dodaj Nowego Użytkownika</h6>
 			 <a href="list.php" class="btn btn-sm btn-light">Wróć</a>
         </div>
         <div class="card-body p-4">
