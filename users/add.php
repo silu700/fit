@@ -35,6 +35,10 @@ include $root . '/includes/sidebar.php';
         <div class="card-header bg-primary text-white py-3">
             <h6 class="m-0 fw-bold"><i class="fas fa-user-plus me-2"></i>Dodaj Nowego Użytkownika</h6>
         </div>
+        <div class="card-header py-3 bg-primary text-white d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold">Zaksięguj wpłatę</h6>
+            <a href="list.php" class="btn btn-sm btn-light">Wróć</a>
+        </div>
         <div class="card-body p-4">
             <form method="POST" id="addUserForm">
                 <div class="row">
@@ -79,7 +83,6 @@ include $root . '/includes/sidebar.php';
                     <button type="submit" id="submitBtn" class="btn btn-secondary btn-lg shadow-sm" disabled>
                         Utwórz użytkownika
                     </button>
-                    <a href="list.php" class="btn btn-link text-muted mt-1 small text-decoration-none">Anuluj i wróć</a>
                 </div>
             </form>
         </div>
