@@ -109,9 +109,9 @@ function renderPagination($page, $totalPages) {
                                     }
                                 ?>
                                 <?php if ($imgUrl): ?>
-                                    <img src="<?= $imgUrl ?>" style="width: 100px; height: 69px; object-fit: cover; border-radius: 5px;" alt="foto">
+                                    <img src="<?= $imgUrl ?>" style="width: 150px; height: 103pxpx; object-fit: cover; border-radius: 5px;" alt="foto">
                                 <?php else: ?>
-                                    <div style="width: 100px; height: 69px; background: #eee; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+                                    <div style="width: 150px; height: 103px; background: #eee; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
                                         <i class="fas fa-image text-muted small"></i>
                                     </div>
                                 <?php endif; ?>
