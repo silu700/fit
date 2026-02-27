@@ -8,9 +8,19 @@ include '../includes/sidebar.php';
 ?>
 
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
         <h1 class="h3 mb-0 text-gray-800">Biblioteka Ćwiczeń</h1>
-        <a href="add.php" class="btn btn-primary shadow-sm">
+        
+        <div class="flex-grow-1 mx-md-4 w-100">
+            <div class="input-group shadow-sm">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" id="exerciseSearch" class="form-control border-start-0" placeholder="Szukaj ćwiczenia po nazwie...">
+            </div>
+        </div>
+
+        <a href="add.php" class="btn btn-success shadow-sm px-4">
             <i class="fas fa-plus-circle me-2"></i> Dodaj ćwiczenie
         </a>
     </div>
@@ -18,18 +28,19 @@ include '../includes/sidebar.php';
     <div class="card shadow mb-4">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle" id="exercisesTable">
                     <thead class="table-light">
                         <tr>
                             <th>Nazwa ćwiczenia</th>
                             <th>Linki Video / Dane</th>
+                            <th>Miniatura</th>
                             <th>Akcje</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($exercises as $ex): ?>
                         <tr>
-                            <td><strong><?= htmlspecialchars($ex['nazwa']) ?></strong></td>
+                            <td class="exercise-name"><strong><?= htmlspecialchars($ex['nazwa']) ?></strong></td>
                             <td>
                                 <?php if($ex['youtube_link']): ?>
                                     <a href="<?= $ex['youtube_link'] ?>" target="_blank" class="btn btn-sm btn-outline-danger">
@@ -65,5 +76,22 @@ include '../includes/sidebar.php';
         </div>
     </div>
 </div>
+
+<script>
+// Skrypt wyszukiwarki
+document.getElementById('exerciseSearch').addEventListener('keyup', function() {
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll('#exercisesTable tbody tr');
+
+    rows.forEach(row => {
+        let name = row.querySelector('.exercise-name').textContent.toLowerCase();
+        if (name.includes(filter)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+</script>
 
 <?php include '../includes/footer.php'; ?>
