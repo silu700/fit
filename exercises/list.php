@@ -11,15 +11,38 @@ $offset = ($page - 1) * $limit;
 $totalExercises = $pdo->query("SELECT COUNT(*) FROM fit_exercises")->fetchColumn();
 $totalPages = ceil($totalExercises / $limit);
 
-// 3. Pobieranie danych - używamy bindValue dla INT, żeby LIMIT zadziałał
+// 3. Pobieranie danych z bindowaniem (INT)
 $stmt = $pdo->prepare("SELECT * FROM fit_exercises ORDER BY nazwa ASC LIMIT :limit OFFSET :offset");
 $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
 $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
 $stmt->execute();
 $exercises = $stmt->fetchAll();
 
-include '../includes/header.php'; //
-include '../includes/sidebar.php'; //
+include '../includes/header.php';
+include '../includes/sidebar.php';
+
+// Funkcja pomocnicza do renderowania pagynacji, żeby nie powtarzać kodu
+function renderPagination($page, $totalPages) {
+    if ($totalPages <= 1) return '';
+    $html = '<nav><ul class="pagination pagination-sm m-0 justify-content-center">';
+    
+    // Poprzednia
+    $disPrev = ($page <= 1) ? 'disabled' : '';
+    $html .= '<li class="page-item '.$disPrev.'"><a class="page-link" href="?page='.($page-1).'">Poprzednia</a></li>';
+    
+    // Strony
+    for ($i = 1; $i <= $totalPages; $i++) {
+        $active = ($page == $i) ? 'active' : '';
+        $html .= '<li class="page-item '.$active.'"><a class="page-link" href="?page='.$i.'">'.$i.'</a></li>';
+    }
+    
+    // Następna
+    $disNext = ($page >= $totalPages) ? 'disabled' : '';
+    $html .= '<li class="page-item '.$disNext.'"><a class="page-link" href="?page='.($page+1).'">Następna</a></li>';
+    
+    $html .= '</ul></nav>';
+    return $html;
+}
 ?>
 
 <div class="container-fluid">
@@ -48,6 +71,10 @@ include '../includes/sidebar.php'; //
         </div>
     </div>
 
+    <div class="mb-3 d-flex justify-content-center">
+        <?= renderPagination($page, $totalPages) ?>
+    </div>
+
     <div class="card shadow mb-4">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -74,7 +101,6 @@ include '../includes/sidebar.php'; //
                             </td>
                             <td>
                                 <?php 
-                                    // Logika wyświetlania obrazka
                                     $imgUrl = "";
                                     if (!empty($ex['image_path'])) {
                                         $imgUrl = "/uploads/exercises/" . $ex['image_path'];
@@ -103,30 +129,9 @@ include '../includes/sidebar.php'; //
             </div>
         </div>
         
-        <?php if ($totalPages > 1): ?>
         <div class="card-footer bg-white border-top-0 py-3">
-            <nav>
-                <ul class="pagination pagination-sm m-0 justify-content-center">
-                    <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-                        <a class="page-link" href="?page=<?= $page - 1 ?>">Poprzednia</a>
-                    </li>
-                    <?php 
-                    // Uproszczone wyświetlanie stron (max 7)
-                    $start = max(1, $page - 3);
-                    $end = min($totalPages, $page + 3);
-                    for ($i = $start; $i <= $end; $i++): 
-                    ?>
-                        <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
-                            <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
-                        </li>
-                    <?php endfor; ?>
-                    <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
-                        <a class="page-link" href="?page=<?= $page + 1 ?>">Następna</a>
-                    </li>
-                </ul>
-            </nav>
+            <?= renderPagination($page, $totalPages) ?>
         </div>
-        <?php endif; ?>
     </div>
 </div>
 
@@ -140,4 +145,4 @@ document.getElementById('liveSearch').addEventListener('keyup', function() {
 });
 </script>
 
-<?php include '../includes/footer.php'; ?> //
+<?php include '../includes/header.php'; ?>
