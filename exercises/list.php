@@ -44,6 +44,13 @@ include '../includes/sidebar.php';
 ?>
 
 <div class="container-fluid">
+    <?php if(isset($_GET['msg']) && $_GET['msg'] == 'deleted'): ?>
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-check-circle"></i> Ćwiczenie oraz plik graficzny zostały trwale usunięte.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
     <div class="card shadow mb-4 border-left-primary">
         <div class="card-body">
             <form method="GET" action="list.php" class="row align-items-center">
@@ -80,8 +87,7 @@ include '../includes/sidebar.php';
             <nav><ul class="pagination pagination-sm m-0">
                 <?php 
                 $baseUrl = "?" . ($search ? "s=".urlencode($search) : "kat=".urlencode($kat));
-                for ($i = 1; $i <= $totalPages; $i++): 
-                    if($i == 1 || $i == $totalPages || ($i >= $page-2 && $i <= $page+2)): ?>
+                for ($i = 1; $i <= $totalPages; $i++): if($i == 1 || $i == $totalPages || ($i >= $page-2 && $i <= $page+2)): ?>
                     <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
                         <a class="page-link" href="<?= $baseUrl ?>&page=<?= $i ?>"><?= $i ?></a>
                     </li>
@@ -156,17 +162,6 @@ include '../includes/sidebar.php';
                     </tbody>
                 </table>
             </div>
-        </div>
-        <div class="card-footer bg-white py-3 text-start">
-            <?php if ($totalPages > 1): ?>
-                <nav><ul class="pagination pagination-sm m-0">
-                    <?php for ($i = 1; $i <= $totalPages; $i++): if($i == 1 || $i == $totalPages || ($i >= $page-2 && $i <= $page+2)): ?>
-                        <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
-                            <a class="page-link" href="<?= $baseUrl ?>&page=<?= $i ?>"><?= $i ?></a>
-                        </li>
-                    <?php endif; endfor; ?>
-                </ul></nav>
-            <?php endif; ?>
         </div>
     </div>
 </div>

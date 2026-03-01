@@ -1,35 +1,37 @@
 <?php
-$root = dirname(__DIR__);
-require_once $root . '/config/db.php';
+require_once '../config/db.php';
 
+// 1. Pobranie ID i weryfikacja
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($id > 0) {
     try {
-        // 1. Najpierw pobieramy nazwę obrazka, żeby wiedzieć co usunąć z dysku
+        // 2. Pobieramy informacje o zdjęciu przed usunięciem rekordu
         $stmt = $pdo->prepare("SELECT image_path FROM fit_exercises WHERE id = ?");
         $stmt->execute([$id]);
-        $ex = $stmt->fetch();
+        $exercise = $stmt->fetch();
 
-        if ($ex) {
-            // 2. Jeśli ćwiczenie ma obrazek, usuwamy go fizycznie z folderu
-            if (!empty($ex['image_path'])) {
-                $file_path = $root . '/uploads/exercises/' . $ex['image_path'];
-                if (file_exists($file_path)) {
-                    unlink($file_path);
+        if ($exercise) {
+            // 3. Usuwanie fizycznego pliku z serwera
+            if (!empty($exercise['image_path'])) {
+                $filePath = "../uploads/exercises/" . $exercise['image_path'];
+                if (file_exists($filePath)) {
+                    unlink($filePath); // Usuwa plik
                 }
             }
 
-            // 3. Usuwamy rekord z bazy danych
-            $delete = $pdo->prepare("DELETE FROM fit_exercises WHERE id = ?");
-            $delete->execute([$id]);
+            // 4. Usuwanie rekordu z bazy danych
+            $deleteStmt = $pdo->prepare("DELETE FROM fit_exercises WHERE id = ?");
+            $deleteStmt->execute([$id]);
+
+            // przekierowanie z komunikatem sukcesu
+            header("Location: list.php?msg=deleted");
+            exit;
+        } else {
+            die("Błąd: Nie znaleziono ćwiczenia o podanym ID.");
         }
-
-        header("Location: list.php?msg=deleted");
-        exit;
-
     } catch (PDOException $e) {
-        die("Błąd podczas usuwania: " . $e->getMessage());
+        die("Błąd bazy danych: " . $e->getMessage());
     }
 } else {
     header("Location: list.php");
