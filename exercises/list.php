@@ -46,7 +46,7 @@ include '../includes/sidebar.php';
 <div class="container-fluid">
     <?php if(isset($_GET['msg']) && $_GET['msg'] == 'deleted'): ?>
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-check-circle"></i> Ćwiczenie oraz plik graficzny zostały trwale usunięte.
+            <i class="fas fa-check-circle"></i> Usunięto rekord i pliki.
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>
@@ -62,18 +62,18 @@ include '../includes/sidebar.php';
                     <div class="input-group input-group-sm shadow-sm">
                         <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
                         <input type="text" name="s" id="liveSearch" class="form-control border-start-0" 
-                               placeholder="Szukaj w całej bazie..." value="<?= htmlspecialchars($search) ?>" autocomplete="off">
+                               placeholder="Szukaj..." value="<?= htmlspecialchars($search) ?>" autocomplete="off">
                         <button class="btn btn-primary" type="submit">Szukaj</button>
                     </div>
                 </div>
                 <div class="col-md-3 text-end">
-                    <a href="add.php" class="btn btn-primary shadow-sm btn-sm"><i class="fas fa-plus fa-sm text-white-50"></i> Dodaj nowe</a>
+                    <a href="add.php" class="btn btn-primary shadow-sm btn-sm"><i class="fas fa-plus fa-sm text-white-50"></i> Dodaj</a>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="mb-3 d-flex flex-wrap gap-2">
+    <div class="mb-3 d-flex flex-wrap gap-2 text-start">
         <a href="list.php" class="btn btn-sm <?= ($kat == '' && $search == '') ? 'btn-dark' : 'btn-outline-dark' ?> rounded-pill px-3 shadow-sm">Wszystkie</a>
         <?php foreach($categories as $c): ?>
             <a href="?kat=<?= urlencode($c) ?>" class="btn btn-sm <?= ($kat == $c) ? 'btn-primary' : 'btn-outline-primary' ?> rounded-pill px-3 shadow-sm">
@@ -102,8 +102,8 @@ include '../includes/sidebar.php';
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-4" style="width: 35%;">Nazwa ćwiczenia</th>
-                            <th style="width: 15%;">Mięśnie (Top 3)</th>
+                            <th class="ps-4" style="width: 45%;">Nazwa ćwiczenia</th>
+                            <th style="width: 15%;">Mięśnie</th>
                             <th>Linki</th>
                             <th>Własna</th>
                             <th>Garmin</th>
@@ -127,18 +127,28 @@ include '../includes/sidebar.php';
                                     }
                                     arsort($active);
                                     foreach (array_slice($active, 0, 3, true) as $label => $val): ?>
-                                        <span class="d-block small text-dark mb-1" style="font-size: 0.75rem;">
+                                        <span class="d-block small text-dark mb-1" style="font-size: 0.72rem;">
                                             <i class="fas fa-caret-right text-primary me-1"></i><?= $label ?> (<?= $val ?>)
                                         </span>
                                 <?php endforeach; ?>
                             </td>
                             <td>
+                                <div class="d-flex flex-wrap gap-1">
                                 <?php if(!empty($ex['youtube_link'])): ?>
-                                    <a href="<?= $ex['youtube_link'] ?>" target="_blank" class="btn btn-sm btn-outline-danger me-1"><i class="fab fa-youtube"></i></a>
+                                    <a href="<?= $ex['youtube_link'] ?>" target="_blank" class="btn btn-sm btn-outline-danger" title="YouTube"><i class="fab fa-youtube"></i></a>
                                 <?php endif; ?>
-                                <?php if(!empty($ex['garmin_exercise_link'])): ?>
-                                    <a href="<?= $ex['garmin_exercise_link'] ?>" target="_blank" class="btn btn-sm btn-outline-info text-dark"><i class="fas fa-running"></i></a>
-                                <?php endif; ?>
+                                
+                                <?php 
+                                // Obsługa wielu linków MP4 z Garmina
+                                if(!empty($ex['garmin_video_url'])): 
+                                    $videos = explode(', ', $ex['garmin_video_url']);
+                                    foreach($videos as $index => $vUrl): ?>
+                                        <a href="<?= trim($vUrl) ?>" target="_blank" class="btn btn-sm btn-outline-info text-dark" title="Garmin MP4 <?= count($videos) > 1 ? ($index+1) : '' ?>">
+                                            <i class="fas fa-play-circle"></i>
+                                        </a>
+                                    <?php endforeach;
+                                endif; ?>
+                                </div>
                             </td>
                             <td>
                                 <?php if (!empty($ex['image_path'])): ?>
