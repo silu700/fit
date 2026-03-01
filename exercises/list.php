@@ -134,16 +134,16 @@ function renderPagination($page, $totalPages, $kat) {
                                     <a href="<?= $ex['garmin_exercise_link'] ?>" target="_blank" class="btn btn-sm btn-outline-info text-dark" title="Garmin"><i class="fas fa-running"></i></a>
                                 <?php endif; ?>
                             </td>
-                            <td>
-                                <?php if (!empty($ex['image_path'])): ?>
-                                    <img src="/uploads/exercises/<?= $ex['image_path'] ?>" style="width: 150px; height: 103px; object-fit: cover; border-radius: 5px;">
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php if (!empty($ex['garmin_image_link'])): ?>
-                                    <img src="<?= $ex['garmin_image_link'] ?>" style="width: 150px; height: 103px; object-fit: cover; border-radius: 5px;">
-                                <?php endif; ?>
-                            </td>
+							<td>
+								<?php if (!empty($ex['image_path'])): ?>
+									<img src="/uploads/exercises/<?= $ex['image_path'] ?>" class="border shadow-sm" style="width: 150px; height: 103px; object-fit: cover; border-radius: 5px;">
+								<?php endif; ?>
+							</td>
+							<td>
+								<?php if (!empty($ex['garmin_image_link'])): ?>
+									<img src="<?= $ex['garmin_image_link'] ?>" class="border shadow-sm" style="width: 150px; height: 103px; object-fit: cover; border-radius: 5px;">
+								<?php endif; ?>
+							</td>
                             <td class="text-end pe-4">
                                 <div class="btn-group shadow-sm">
                                     <a href="edit.php?id=<?= $ex['id'] ?>" class="btn btn-sm btn-outline-info"><i class="fas fa-edit"></i></a>
@@ -162,10 +162,24 @@ function renderPagination($page, $totalPages, $kat) {
 
 <script>
 document.getElementById('liveSearch').addEventListener('keyup', function() {
+    // Pobieramy wpisaną frazę i zamieniamy na małe litery
     let filter = this.value.toLowerCase();
+    
+    // Przeszukujemy każdy wiersz tabeli
     document.querySelectorAll('.exercise-row').forEach(row => {
-        let text = row.querySelector('.user-name-cell').innerText.toLowerCase();
-        row.style.display = text.includes(filter) ? "" : "none";
+        // Celujemy wyłącznie w komórkę z nazwami (nazwa + garmin_nazwa)
+        let nameCell = row.querySelector('.user-name-cell');
+        
+        if (nameCell) {
+            let text = nameCell.innerText.toLowerCase();
+            
+            // Jeśli tekst komórki zawiera filtr, pokaż wiersz, w przeciwnym razie ukryj
+            if (text.includes(filter)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        }
     });
 });
 </script>
