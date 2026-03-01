@@ -1,38 +1,35 @@
 <?php
 require_once '../config/db.php';
 
-// 1. Parametry wejściowe
+// 1. Parametry
 $search = isset($_GET['s']) ? trim($_GET['s']) : '';
 $kat = isset($_GET['kat']) ? $_GET['kat'] : '';
 $page = (isset($_GET['page']) && (int)$_GET['page'] > 0) ? (int)$_GET['page'] : 1;
 $limit = 20;
 $offset = ($page - 1) * $limit;
 
-// 2. Pobieranie unikalnych kategorii
+// 2. Kategorie do przycisków
 $categories = $pdo->query("SELECT DISTINCT kategoria FROM fit_exercises WHERE kategoria IS NOT NULL AND kategoria != '' ORDER BY kategoria ASC")->fetchAll(PDO::FETCH_COLUMN);
 
-// 3. Budowanie warunków WHERE (czysty SQL dla stabilności)
+// 3. Logika filtrów: Jeśli jest 's' (szukanie), ignorujemy 'kat'
 $where = [];
-if ($kat !== '') {
-    $where[] = "kategoria = " . $pdo->quote($kat);
-}
 if ($search !== '') {
-    // Używamy quote(), aby bezpiecznie wstawić string bez błędu 500 przy execute
     $s_quoted = $pdo->quote('%' . $search . '%');
     $where[] = "(nazwa LIKE $s_quoted OR garmin_nazwa LIKE $s_quoted)";
+    $kat = ''; // Resetujemy kategorię w logice PHP, żeby nie mieszać wyników
+} elseif ($kat !== '') {
+    $where[] = "kategoria = " . $pdo->quote($kat);
 }
 
 $whereSql = !empty($where) ? " WHERE " . implode(" AND ", $where) : "";
 
-// 4. Liczenie rekordów i paginacja
+// 4. Liczenie i Dane
 $totalExercises = (int)$pdo->query("SELECT COUNT(*) FROM fit_exercises" . $whereSql)->fetchColumn();
 $totalPages = ceil($totalExercises / $limit);
 
-// 5. Pobieranie danych (LIMIT/OFFSET jako czyste liczby)
 $sql = "SELECT * FROM fit_exercises $whereSql ORDER BY nazwa ASC LIMIT $limit OFFSET $offset";
 $list = $pdo->query($sql)->fetchAll();
 
-// Tłumaczenia mięśni
 $muscleTranslations = [
     'muscle_abductors' => 'Odwodziciele', 'muscle_abs' => 'Brzuch', 'muscle_adductors' => 'Przywodziciele',
     'muscle_biceps' => 'Biceps', 'muscle_calves' => 'Łydki', 'muscle_chest' => 'Klatka piersiowa',
@@ -55,11 +52,10 @@ include '../includes/sidebar.php';
                     <small class="text-muted">Wyników: <?= $totalExercises ?></small>
                 </div>
                 <div class="col-md-5">
-                    <?php if($kat): ?><input type="hidden" name="kat" value="<?= htmlspecialchars($kat) ?>"><?php endif; ?>
                     <div class="input-group input-group-sm shadow-sm">
                         <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
                         <input type="text" name="s" id="liveSearch" class="form-control border-start-0" 
-                               placeholder="Szukaj..." value="<?= htmlspecialchars($search) ?>" autocomplete="off">
+                               placeholder="Szukaj w całej bazie..." value="<?= htmlspecialchars($search) ?>" autocomplete="off">
                         <button class="btn btn-primary" type="submit">Szukaj</button>
                     </div>
                 </div>
@@ -71,9 +67,9 @@ include '../includes/sidebar.php';
     </div>
 
     <div class="mb-3 d-flex flex-wrap gap-2">
-        <a href="list.php<?= $search ? '?s='.urlencode($search) : '' ?>" class="btn btn-sm <?= $kat == '' ? 'btn-dark' : 'btn-outline-dark' ?> rounded-pill px-3">Wszystkie</a>
+        <a href="list.php" class="btn btn-sm <?= ($kat == '' && $search == '') ? 'btn-dark' : 'btn-outline-dark' ?> rounded-pill px-3">Wszystkie</a>
         <?php foreach($categories as $c): ?>
-            <a href="?kat=<?= urlencode($c) ?><?= $search ? '&s='.urlencode($search) : '' ?>" class="btn btn-sm <?= $kat == $c ? 'btn-primary' : 'btn-outline-primary' ?> rounded-pill px-3">
+            <a href="?kat=<?= urlencode($c) ?>" class="btn btn-sm <?= ($kat == $c) ? 'btn-primary' : 'btn-outline-primary' ?> rounded-pill px-3">
                 <?= htmlspecialchars($c) ?>
             </a>
         <?php endforeach; ?>
@@ -82,9 +78,12 @@ include '../includes/sidebar.php';
     <div class="mb-3 text-start">
         <?php if ($totalPages > 1): ?>
             <nav><ul class="pagination pagination-sm m-0">
-                <?php for ($i = 1; $i <= $totalPages; $i++): if($i == 1 || $i == $totalPages || ($i >= $page-2 && $i <= $page+2)): ?>
+                <?php 
+                $baseUrl = "?" . ($search ? "s=".urlencode($search) : "kat=".urlencode($kat));
+                for ($i = 1; $i <= $totalPages; $i++): 
+                    if($i == 1 || $i == $totalPages || ($i >= $page-2 && $i <= $page+2)): ?>
                     <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
-                        <a class="page-link" href="?page=<?= $i ?><?= $kat ? '&kat='.urlencode($kat) : '' ?><?= $search ? '&s='.urlencode($search) : '' ?>"><?= $i ?></a>
+                        <a class="page-link" href="<?= $baseUrl ?>&page=<?= $i ?>"><?= $i ?></a>
                     </li>
                 <?php endif; endfor; ?>
             </ul></nav>
@@ -113,6 +112,10 @@ include '../includes/sidebar.php';
                                 <small class="text-muted">(<?= htmlspecialchars($ex['garmin_nazwa'] ?? '') ?>)</small>
                             </td>
                             <td>
+                                
+
+[Image of major muscle groups in human body]
+
                                 <?php 
                                     $active = [];
                                     foreach ($muscleTranslations as $key => $label) {
@@ -153,6 +156,7 @@ include '../includes/sidebar.php';
 </div>
 
 <script>
+// Live Search na bieżącej stronie (opcjonalnie)
 document.getElementById('liveSearch').addEventListener('keyup', function(e) {
     if (e.key === 'Enter') return; 
     let filter = this.value.toLowerCase();
