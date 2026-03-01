@@ -1,29 +1,29 @@
 <?php
 require_once '../config/db.php';
 
-// 1. Parametry
+// 1. Parametry wejściowe
 $search = isset($_GET['s']) ? trim($_GET['s']) : '';
 $kat = isset($_GET['kat']) ? $_GET['kat'] : '';
 $page = (isset($_GET['page']) && (int)$_GET['page'] > 0) ? (int)$_GET['page'] : 1;
 $limit = 20;
 $offset = ($page - 1) * $limit;
 
-// 2. Kategorie do przycisków
+// 2. Pobieranie unikalnych kategorii
 $categories = $pdo->query("SELECT DISTINCT kategoria FROM fit_exercises WHERE kategoria IS NOT NULL AND kategoria != '' ORDER BY kategoria ASC")->fetchAll(PDO::FETCH_COLUMN);
 
-// 3. Logika filtrów: Jeśli jest 's' (szukanie), ignorujemy 'kat'
+// 3. Logika niezależnego szukania
 $where = [];
 if ($search !== '') {
     $s_quoted = $pdo->quote('%' . $search . '%');
     $where[] = "(nazwa LIKE $s_quoted OR garmin_nazwa LIKE $s_quoted)";
-    $kat = ''; // Resetujemy kategorię w logice PHP, żeby nie mieszać wyników
+    $kat = ''; 
 } elseif ($kat !== '') {
     $where[] = "kategoria = " . $pdo->quote($kat);
 }
 
 $whereSql = !empty($where) ? " WHERE " . implode(" AND ", $where) : "";
 
-// 4. Liczenie i Dane
+// 4. Liczenie i pobieranie danych
 $totalExercises = (int)$pdo->query("SELECT COUNT(*) FROM fit_exercises" . $whereSql)->fetchColumn();
 $totalPages = ceil($totalExercises / $limit);
 
@@ -31,12 +31,12 @@ $sql = "SELECT * FROM fit_exercises $whereSql ORDER BY nazwa ASC LIMIT $limit OF
 $list = $pdo->query($sql)->fetchAll();
 
 $muscleTranslations = [
-    'muscle_abductors' => 'Odwodziciele', 'muscle_abs' => 'Brzuch', 'muscle_adductors' => 'Przywodziciele',
-    'muscle_biceps' => 'Biceps', 'muscle_calves' => 'Łydki', 'muscle_chest' => 'Klatka piersiowa',
-    'muscle_forearm' => 'Przedramię', 'muscle_glutes' => 'Pośladki', 'muscle_hamstrings' => 'Dwugłowe ud',
-    'muscle_hips' => 'Biodra', 'muscle_lats' => 'Najszerszy grzbietu', 'muscle_lower_back' => 'Prostowniki grzbietu',
-    'muscle_obliques' => 'Skośne brzucha', 'muscle_quads' => 'Czworogłowe ud', 'muscle_shoulders' => 'Barki',
-    'muscle_traps' => 'Kaptury', 'muscle_triceps' => 'Triceps'
+    'muscle_abs' => 'Brzuch', 'muscle_obliques' => 'Skośne', 'muscle_lower_back' => 'Prostowniki',
+    'muscle_glutes' => 'Pośladki', 'muscle_quads' => 'Czworogłowe', 'muscle_hamstrings' => 'Dwugłowe',
+    'muscle_adductors' => 'Przywodziciele', 'muscle_abductors' => 'Odwodziciele', 'muscle_calves' => 'Łydki',
+    'muscle_chest' => 'Klatka', 'muscle_shoulders' => 'Barki', 'muscle_biceps' => 'Biceps',
+    'muscle_triceps' => 'Triceps', 'muscle_forearm' => 'Przedramię', 'muscle_lats' => 'Najszerszy',
+    'muscle_traps' => 'Kaptury', 'muscle_hips' => 'Biodra'
 ];
 
 include '../includes/header.php';
@@ -49,7 +49,7 @@ include '../includes/sidebar.php';
             <form method="GET" action="list.php" class="row align-items-center">
                 <div class="col-md-4">
                     <h1 class="h4 m-0 text-gray-800">Biblioteka Ćwiczeń</h1>
-                    <small class="text-muted">Wyników: <?= $totalExercises ?></small>
+                    <small class="text-muted">Pozycji: <?= $totalExercises ?></small>
                 </div>
                 <div class="col-md-5">
                     <div class="input-group input-group-sm shadow-sm">
@@ -60,16 +60,16 @@ include '../includes/sidebar.php';
                     </div>
                 </div>
                 <div class="col-md-3 text-end">
-                    <a href="add.php" class="btn btn-primary shadow-sm btn-sm"><i class="fas fa-plus fa-sm text-white-50"></i> Dodaj</a>
+                    <a href="add.php" class="btn btn-primary shadow-sm btn-sm"><i class="fas fa-plus fa-sm text-white-50"></i> Dodaj nowe</a>
                 </div>
             </form>
         </div>
     </div>
 
     <div class="mb-3 d-flex flex-wrap gap-2">
-        <a href="list.php" class="btn btn-sm <?= ($kat == '' && $search == '') ? 'btn-dark' : 'btn-outline-dark' ?> rounded-pill px-3">Wszystkie</a>
+        <a href="list.php" class="btn btn-sm <?= ($kat == '' && $search == '') ? 'btn-dark' : 'btn-outline-dark' ?> rounded-pill px-3 shadow-sm">Wszystkie</a>
         <?php foreach($categories as $c): ?>
-            <a href="?kat=<?= urlencode($c) ?>" class="btn btn-sm <?= ($kat == $c) ? 'btn-primary' : 'btn-outline-primary' ?> rounded-pill px-3">
+            <a href="?kat=<?= urlencode($c) ?>" class="btn btn-sm <?= ($kat == $c) ? 'btn-primary' : 'btn-outline-primary' ?> rounded-pill px-3 shadow-sm">
                 <?= htmlspecialchars($c) ?>
             </a>
         <?php endforeach; ?>
@@ -96,8 +96,8 @@ include '../includes/sidebar.php';
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-4">Nazwa</th>
-                            <th>Mięśnie</th>
+                            <th class="ps-4" style="width: 35%;">Nazwa ćwiczenia</th>
+                            <th style="width: 15%;">Mięśnie (Top 3)</th>
                             <th>Linki</th>
                             <th>Własna</th>
                             <th>Garmin</th>
@@ -108,8 +108,10 @@ include '../includes/sidebar.php';
                         <?php foreach ($list as $ex): ?>
                         <tr class="exercise-row">
                             <td class="ps-4 user-name-cell">
-                                <div class="fw-bold text-dark"><?= htmlspecialchars($ex['nazwa'] ?? '') ?></div>
-                                <small class="text-muted">(<?= htmlspecialchars($ex['garmin_nazwa'] ?? '') ?>)</small>
+                                <a href="view.php?id=<?= $ex['id'] ?>" class="text-decoration-none">
+                                    <div class="fw-bold text-dark mb-0"><?= htmlspecialchars($ex['nazwa'] ?? '') ?></div>
+                                </a>
+                                <small class="text-muted" style="font-size: 0.75rem;">(<?= htmlspecialchars($ex['garmin_nazwa'] ?? '') ?>)</small>
                             </td>
                             <td>
                                 <?php 
@@ -119,12 +121,18 @@ include '../includes/sidebar.php';
                                     }
                                     arsort($active);
                                     foreach (array_slice($active, 0, 3, true) as $label => $val): ?>
-                                        <span class="d-block small mb-1"><i class="fas fa-caret-right text-primary me-1"></i><?= $label ?></span>
+                                        <span class="d-block small text-dark mb-1" style="font-size: 0.75rem;">
+                                            <i class="fas fa-caret-right text-primary me-1"></i><?= $label ?> (<?= $val ?>)
+                                        </span>
                                 <?php endforeach; ?>
                             </td>
                             <td>
-                                <?php if(!empty($ex['youtube_link'])): ?><a href="<?= $ex['youtube_link'] ?>" target="_blank" class="btn btn-sm btn-outline-danger me-1"><i class="fab fa-youtube"></i></a><?php endif; ?>
-                                <?php if(!empty($ex['garmin_exercise_link'])): ?><a href="<?= $ex['garmin_exercise_link'] ?>" target="_blank" class="btn btn-sm btn-outline-info text-dark"><i class="fas fa-running"></i></a><?php endif; ?>
+                                <?php if(!empty($ex['youtube_link'])): ?>
+                                    <a href="<?= $ex['youtube_link'] ?>" target="_blank" class="btn btn-sm btn-outline-danger me-1"><i class="fab fa-youtube"></i></a>
+                                <?php endif; ?>
+                                <?php if(!empty($ex['garmin_exercise_link'])): ?>
+                                    <a href="<?= $ex['garmin_exercise_link'] ?>" target="_blank" class="btn btn-sm btn-outline-info text-dark"><i class="fas fa-running"></i></a>
+                                <?php endif; ?>
                             </td>
                             <td>
                                 <?php if (!empty($ex['image_path'])): ?>
@@ -137,9 +145,10 @@ include '../includes/sidebar.php';
                                 <?php endif; ?>
                             </td>
                             <td class="text-end pe-4">
-                                <div class="btn-group">
-                                    <a href="edit.php?id=<?= $ex['id'] ?>" class="btn btn-sm btn-outline-info"><i class="fas fa-edit"></i></a>
-                                    <a href="delete.php?id=<?= $ex['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Usunąć?')"><i class="fas fa-trash"></i></a>
+                                <div class="btn-group shadow-sm">
+                                    <a href="view.php?id=<?= $ex['id'] ?>" class="btn btn-sm btn-outline-primary" title="Podgląd"><i class="fas fa-eye"></i></a>
+                                    <a href="edit.php?id=<?= $ex['id'] ?>" class="btn btn-sm btn-outline-info" title="Edytuj"><i class="fas fa-edit"></i></a>
+                                    <a href="delete.php?id=<?= $ex['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Usunąć?')" title="Usuń"><i class="fas fa-trash"></i></a>
                                 </div>
                             </td>
                         </tr>
@@ -148,13 +157,23 @@ include '../includes/sidebar.php';
                 </table>
             </div>
         </div>
+        <div class="card-footer bg-white py-3 text-start">
+            <?php if ($totalPages > 1): ?>
+                <nav><ul class="pagination pagination-sm m-0">
+                    <?php for ($i = 1; $i <= $totalPages; $i++): if($i == 1 || $i == $totalPages || ($i >= $page-2 && $i <= $page+2)): ?>
+                        <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
+                            <a class="page-link" href="<?= $baseUrl ?>&page=<?= $i ?>"><?= $i ?></a>
+                        </li>
+                    <?php endif; endfor; ?>
+                </ul></nav>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 
 <script>
-// Live Search na bieżącej stronie (opcjonalnie)
 document.getElementById('liveSearch').addEventListener('keyup', function(e) {
-    if (e.key === 'Enter') return; 
+    if (e.key === 'Enter') return;
     let filter = this.value.toLowerCase();
     document.querySelectorAll('.exercise-row').forEach(row => {
         let text = row.querySelector('.user-name-cell').innerText.toLowerCase();
