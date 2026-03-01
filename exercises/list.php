@@ -101,4 +101,52 @@ function renderPagination($page, $totalPages) {
                                         }
                                     }
                                     arsort($activeMuscles); // Sortowanie od największej wartości
-                                    foreach ($activeMuscles as $label =>
+                                    foreach ($activeMuscles as $label => $val): ?>
+                                        <span class="badge bg-light text-primary border me-1 small"><?= $label ?></span>
+                                <?php endforeach; ?>
+                            </td>
+                            <td>
+                                <?php if(!empty($ex['youtube_link'])): ?>
+                                    <a href="<?= $ex['youtube_link'] ?>" target="_blank" class="btn btn-sm btn-outline-danger"><i class="fab fa-youtube"></i></a>
+                                <?php endif; ?>
+                                <?php if(!empty($ex['garmin_exercise_link'])): ?>
+                                    <a href="<?= $ex['garmin_exercise_link'] ?>" target="_blank" class="btn btn-sm btn-outline-info text-dark"><i class="fas fa-running"></i></a>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php 
+                                    $imgUrl = !empty($ex['image_path']) ? "/uploads/exercises/" . $ex['image_path'] : ($ex['garmin_image_link'] ?? "");
+                                ?>
+                                <?php if ($imgUrl): ?>
+                                    <img src="<?= $imgUrl ?>" style="width: 45px; height: 45px; object-fit: cover; border-radius: 5px;">
+                                <?php else: ?>
+                                    <div class="bg-light border rounded text-muted d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;"><i class="fas fa-image small"></i></div>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group shadow-sm">
+                                    <a href="edit.php?id=<?= $ex['id'] ?>" class="btn btn-sm btn-outline-info"><i class="fas fa-edit"></i></a>
+                                    <a href="delete.php?id=<?= $ex['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Usunąć?')"><i class="fas fa-trash"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white py-3"><?= renderPagination($page, $totalPages) ?></div>
+    </div>
+</div>
+
+<script>
+document.getElementById('liveSearch').addEventListener('keyup', function() {
+    let filter = this.value.toLowerCase();
+    document.querySelectorAll('.exercise-row').forEach(row => {
+        let text = row.querySelector('.user-name-cell').innerText.toLowerCase();
+        row.style.display = text.includes(filter) ? "" : "none";
+    });
+});
+</script>
+
+<?php include '../includes/footer.php'; ?>
