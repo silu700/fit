@@ -112,10 +112,6 @@ include '../includes/sidebar.php';
                                 <small class="text-muted">(<?= htmlspecialchars($ex['garmin_nazwa'] ?? '') ?>)</small>
                             </td>
                             <td>
-                                
-
-[Image of major muscle groups in human body]
-
                                 <?php 
                                     $active = [];
                                     foreach ($muscleTranslations as $key => $label) {
