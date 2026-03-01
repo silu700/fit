@@ -1,7 +1,7 @@
 <?php
 require_once '../config/db.php';
 
-// 1. Parametry z filtrowaniem bezpieczeństwa
+// 1. Parametry
 $search = isset($_GET['s']) ? trim($_GET['s']) : '';
 $kat = isset($_GET['kat']) ? $_GET['kat'] : '';
 $limit = 20; 
@@ -16,30 +16,33 @@ $categories = $pdo->query("SELECT DISTINCT kategoria FROM fit_exercises WHERE ka
 $whereClauses = [];
 $params = [];
 
-if ($kat) {
+if ($kat !== '') {
     $whereClauses[] = "kategoria = :kat";
     $params[':kat'] = $kat;
 }
-if ($search) {
+if ($search !== '') {
     $whereClauses[] = "(nazwa LIKE :s OR garmin_nazwa LIKE :s)";
     $params[':s'] = "%$search%";
 }
 
 $whereSql = !empty($whereClauses) ? " WHERE " . implode(" AND ", $whereClauses) : "";
 
-// 4. Liczenie rekordów
+// 4. Liczenie rekordów (używamy prepare/execute dla bezpieczeństwa)
 $countSql = "SELECT COUNT(*) FROM fit_exercises" . $whereSql;
 $stmtCount = $pdo->prepare($countSql);
 $stmtCount->execute($params);
-$totalExercises = $stmtCount->fetchColumn();
+$totalExercises = (int)$stmtCount->fetchColumn();
 $totalPages = ceil($totalExercises / $limit);
 
-// 5. Pobieranie danych - LIMIT i OFFSET wstawione bezpośrednio jako liczby
+// 5. Pobieranie danych - LIMIT i OFFSET wstrzykiwane bezpośrednio do stringa (rozwiązuje błąd 500)
 $sql = "SELECT * FROM fit_exercises" . $whereSql . " ORDER BY nazwa ASC LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
 $stmt = $pdo->prepare($sql);
+
+// Bindaowanie tylko parametrów WHERE (bez limit/offset)
 foreach ($params as $key => $val) {
     $stmt->bindValue($key, $val);
 }
+
 $stmt->execute();
 $list = $stmt->fetchAll();
 
@@ -81,7 +84,7 @@ include '../includes/sidebar.php';
     </div>
 
     <div class="mb-3 d-flex flex-wrap gap-2">
-        <a href="list.php" class="btn btn-sm <?= $kat == '' ? 'btn-dark' : 'btn-outline-dark' ?> rounded-pill px-3">Wszystkie</a>
+        <a href="list.php<?= $search ? '?s='.urlencode($search) : '' ?>" class="btn btn-sm <?= $kat == '' ? 'btn-dark' : 'btn-outline-dark' ?> rounded-pill px-3">Wszystkie</a>
         <?php foreach($categories as $c): ?>
             <a href="?kat=<?= urlencode($c) ?><?= $search ? '&s='.urlencode($search) : '' ?>" class="btn btn-sm <?= $kat == $c ? 'btn-primary' : 'btn-outline-primary' ?> rounded-pill px-3">
                 <?= htmlspecialchars($c) ?>
@@ -125,7 +128,7 @@ include '../includes/sidebar.php';
                         <?php foreach ($list as $ex): ?>
                         <tr class="exercise-row">
                             <td class="ps-4 user-name-cell">
-                                <div class="fw-bold text-dark"><?= htmlspecialchars($ex['nazwa']) ?></div>
+                                <div class="fw-bold text-dark"><?= htmlspecialchars($ex['nazwa'] ?? '') ?></div>
                                 <?php if (!empty($ex['garmin_nazwa'])): ?>
                                     <small class="text-muted">(<?= htmlspecialchars($ex['garmin_nazwa']) ?>)</small>
                                 <?php endif; ?>
@@ -134,7 +137,7 @@ include '../includes/sidebar.php';
                                 <?php 
                                     $active = [];
                                     foreach ($muscleTranslations as $key => $label) {
-                                        if (!empty($ex[$key]) && $ex[$key] > 0) $active[$label] = $ex[$key];
+                                        if (!empty($ex[$key]) && $ex[$key] > 0) $active[$label] = (int)$ex[$key];
                                     }
                                     arsort($active);
                                     foreach (array_slice($active, 0, 3, true) as $label => $val): ?>
@@ -175,10 +178,9 @@ include '../includes/sidebar.php';
 </div>
 
 <script>
-// LIVE SEARCH (Filtruje to co na stronie)
+// LIVE SEARCH
 document.getElementById('liveSearch').addEventListener('keyup', function(e) {
     if (e.key === 'Enter') return; 
-    
     let filter = this.value.toLowerCase();
     document.querySelectorAll('.exercise-row').forEach(row => {
         let text = row.querySelector('.user-name-cell').innerText.toLowerCase();
