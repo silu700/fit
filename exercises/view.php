@@ -25,7 +25,7 @@ foreach ($muscleTranslations as $key => $label) {
 }
 arsort($activeMuscles);
 
-// Parsowanie linków wideo MP4 (oddzielone przecinkami)
+// Parsowanie linków wideo MP4
 $videoLinks = !empty($ex['garmin_video_url']) ? explode(', ', $ex['garmin_video_url']) : [];
 
 include '../includes/header.php';
@@ -47,8 +47,8 @@ include '../includes/sidebar.php';
     <div class="row">
         <div class="col-xl-5 col-lg-6">
             <div class="card shadow mb-4">
-                <div class="card-header py-3 bg-white border-bottom">
-                    <h6 class="m-0 font-weight-bold text-primary">Podgląd wizualny</h6>
+                <div class="card-header py-3 bg-white">
+                    <h6 class="m-0 font-weight-bold text-primary">Podgląd ćwiczenia</h6>
                 </div>
                 <div class="card-body p-2 text-center bg-light">
                     <?php 
@@ -63,7 +63,7 @@ include '../includes/sidebar.php';
             </div>
 
             <div class="card shadow mb-4">
-                <div class="card-header py-3 bg-white">
+                <div class="card-header py-3 bg-white border-bottom">
                     <h6 class="m-0 font-weight-bold text-primary">Zaangażowanie mięśni (0-9)</h6>
                 </div>
                 <div class="card-body">
@@ -91,53 +91,36 @@ include '../includes/sidebar.php';
         </div>
 
         <div class="col-xl-7 col-lg-6">
-            <?php if(!empty($videoLinks)): ?>
-            <div class="card shadow mb-4 border-left-info">
-                <div class="card-header py-3 bg-white">
-                    <h6 class="m-0 font-weight-bold text-info"><i class="fas fa-play-circle"></i> Odtwarzacz Wideo MP4</h6>
-                </div>
-                <div class="card-body p-0 bg-dark">
-                    <div class="row g-0">
-                        <?php foreach($videoLinks as $idx => $link): ?>
-                        <div class="col-12 border-bottom border-secondary p-2 text-center">
-                            <small class="text-white-50 d-block mb-2">Wideo #<?= $idx + 1 ?></small>
-                            <video controls class="w-100 rounded" style="max-height: 350px;" preload="metadata">
-                                <source src="<?= trim($link) ?>" type="video/mp4">
-                                Twoja przeglądarka nie obsługuje wideo.
-                            </video>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-            <?php endif; ?>
-
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-white">
                     <h6 class="m-0 font-weight-bold text-primary">Instrukcja i Technika</h6>
                 </div>
                 <div class="card-body">
-                    <div class="text-dark mb-4 p-3 bg-light rounded shadow-sm border" style="white-space: pre-wrap; line-height: 1.7;">
+                    <div class="text-dark mb-4 p-3 bg-light rounded shadow-sm border" style="white-space: pre-wrap; line-height: 1.7; font-size: 1.05rem;">
                         <?= nl2br(htmlspecialchars($ex['instrukcja'] ?: 'Brak instrukcji.')) ?>
                     </div>
                     
                     <?php if(!empty($ex['wskazowki'])): ?>
                     <div class="alert alert-danger border-left-danger shadow-sm">
-                        <h6 class="fw-bold"><i class="fas fa-exclamation-circle"></i> UWAGA:</h6>
-                        <p class="mb-0 small text-dark"><?= nl2br(htmlspecialchars($ex['wskazowki'])) ?></p>
+                        <h6 class="fw-bold"><i class="fas fa-exclamation-circle"></i> WSKAZÓWKI TECHNICZNE:</h6>
+                        <p class="mb-0 italic small text-dark"><?= nl2br(htmlspecialchars($ex['wskazowki'])) ?></p>
                     </div>
                     <?php endif; ?>
 
-                    <div class="d-grid gap-2 mt-3">
+                    <div class="row g-2 mt-2">
                         <?php if(!empty($ex['youtube_link'])): ?>
-                            <a href="<?= $ex['youtube_link'] ?>" target="_blank" class="btn btn-danger btn-sm text-start shadow-sm">
-                                <i class="fab fa-youtube me-2"></i> Zobacz na YouTube (Pełny ekran)
+                        <div class="col-md-6">
+                            <a href="<?= $ex['youtube_link'] ?>" target="_blank" class="btn btn-danger btn-sm w-100 shadow-sm">
+                                <i class="fab fa-youtube me-2"></i> YouTube
                             </a>
+                        </div>
                         <?php endif; ?>
                         <?php if(!empty($ex['garmin_exercise_link'])): ?>
-                            <a href="<?= $ex['garmin_exercise_link'] ?>" target="_blank" class="btn btn-info btn-sm text-start text-white shadow-sm">
-                                <i class="fas fa-running me-2"></i> Szczegóły ćwiczenia Garmin Connect
+                        <div class="col-md-6">
+                            <a href="<?= $ex['garmin_exercise_link'] ?>" target="_blank" class="btn btn-info btn-sm w-100 text-white shadow-sm">
+                                <i class="fas fa-running me-2"></i> Strona Garmin
                             </a>
+                        </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -146,14 +129,40 @@ include '../includes/sidebar.php';
             <div class="card shadow mb-4 bg-gray-100">
                 <div class="card-body py-2">
                     <div class="row small">
-                        <div class="col-md-6 border-right"><strong>Nazwa Garmin:</strong> <?= htmlspecialchars($ex['garmin_nazwa'] ?: '-') ?></div>
+                        <div class="col-md-6 border-right"><strong>Oryginalna nazwa:</strong> <?= htmlspecialchars($ex['garmin_nazwa'] ?: '-') ?></div>
                         <div class="col-md-3 border-right"><strong>Trudność:</strong> <?= $ex['difficulty'] ?>/3</div>
-                        <div class="col-md-3"><strong>Kategoria:</strong> <?= $ex['garmin_category'] ?></div>
+                        <div class="col-md-3"><strong>Kat. Garmin:</strong> <?= $ex['garmin_category'] ?></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <?php if(!empty($videoLinks)): ?>
+    <div class="row mt-2">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-white">
+                    <h6 class="m-0 font-weight-bold text-dark"><i class="fas fa-play-circle me-2 text-info"></i>Wideo instruktażowe MP4</h6>
+                </div>
+                <div class="card-body bg-light">
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        <?php foreach($videoLinks as $idx => $link): ?>
+                        <div class="col">
+                            <div class="bg-dark rounded p-1 shadow-sm">
+                                <video controls class="w-100 rounded" style="max-height: 280px;" preload="metadata">
+                                    <source src="<?= trim($link) ?>" type="video/mp4">
+                                </video>
+                                <div class="text-center py-1"><small class="text-white-50 small">Odtwarzacz #<?= $idx + 1 ?></small></div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <?php include '../includes/footer.php'; ?>
